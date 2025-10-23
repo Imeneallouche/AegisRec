@@ -1,0 +1,17 @@
+{
+  "site_id": "site-alpha-001",
+  "name": "Alpha Water Treatment Plant",
+  "description": "Pilot water treatment plant with two processing lines and central SCADA.",
+  "location": {
+    "country": "Algeria",
+    "region": "Oran Governorate",
+    "site_address": "Zone Industrielle, Oran"
+  },
+  "contact": {
+    "owner": "Alpha Utilities",
+    "site_admin": "eng.imene@alphautils.local",
+    "phone": "+213-41-000-000"
+  },
+  "timezone": "Africa/Algiers",
+  "created_at": "2025-10-23T10:00:00Z"
+}

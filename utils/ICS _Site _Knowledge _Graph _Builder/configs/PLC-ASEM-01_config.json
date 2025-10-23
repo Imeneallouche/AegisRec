@@ -1,0 +1,113 @@
+{
+  "asset_id": "PLC-ASEM-01",
+  "device": {
+    "manufacturer": "Siemens",
+    "model": "S7-1500 CPU 1516-3 PN/DP",
+    "serial_number": "S7-1516-AX-0001",
+    "firmware_version": "FW-2.3.1"
+  },
+  "network": {
+    "interfaces": [
+      {
+        "name": "eth0",
+        "ip_address": "10.10.5.78",
+        "subnet_mask": "255.255.255.0",
+        "gateway": "10.10.5.1",
+        "mac": "00:1A:2B:3C:4D:5E",
+        "protocols": [
+          "PROFINET",
+          "ModbusTCP"
+        ]
+      }
+    ],
+    "ports_open": [
+      502,
+      102,
+      5020
+    ]
+  },
+  "io": {
+    "modules": [
+      {
+        "slot": 1,
+        "type": "DigitalInput",
+        "points": 16
+      },
+      {
+        "slot": 2,
+        "type": "DigitalOutput",
+        "points": 16
+      },
+      {
+        "slot": 3,
+        "type": "AnalogInput",
+        "points": 4
+      }
+    ],
+    "tags": [
+      {
+        "tag": "PUMP_START",
+        "address": "DB1.DBX0.0",
+        "data_type": "BOOL",
+        "description": "Start command for main pump"
+      },
+      {
+        "tag": "PUMP_SPEED",
+        "address": "DB1.DBD4",
+        "data_type": "REAL",
+        "description": "Target RPM for pump"
+      },
+      {
+        "tag": "PRESSURE_SENSOR",
+        "address": "DB2.DBD0",
+        "data_type": "REAL",
+        "description": "Pressure reading from sensor PS-1"
+      }
+    ]
+  },
+  "modbus_mapping": {
+    "enabled": true,
+    "unit_id": 1,
+    "registers": [
+      {
+        "name": "PUMP_SPEED",
+        "register": 40001,
+        "type": "HR",
+        "length": 2
+      },
+      {
+        "name": "PRESSURE",
+        "register": 40003,
+        "type": "HR",
+        "length": 2
+      }
+    ]
+  },
+  "security": {
+    "accounts": [
+      {
+        "username": "svc_monitor",
+        "role": "monitor",
+        "last_password_change": "2025-08-01T12:00:00Z"
+      },
+      {
+        "username": "admin",
+        "role": "admin",
+        "last_password_change": "2024-12-01T09:00:00Z"
+      }
+    ],
+    "ssh_enabled": false,
+    "telnet_enabled": false,
+    "remote_management": {
+      "allowed_subnets": [
+        "10.10.0.0/16"
+      ],
+      "jump_host_required": true
+    }
+  },
+  "backup": {
+    "last_config_backup": "2025-10-01T02:00:00Z",
+    "backup_path": "/backups/plc-ase m-01/config_20251001.zip"
+  },
+  "notes": "PLC controls the main feed pump on line A. Scheduled maintenance monthly."
+}

@@ -1,0 +1,2 @@
+asset_id,type,manufacturer,model,serial_number,ip_address,mac_address,location,rack_slot,firmware_version,criticality,tags
+PLC-ASEM-01,PLC,Siemens,S7-1500 CPU 1516-3 PN/DP,S7-1516-AX-0001,10.10.5.78,00:1A:2B:3C:4D:5E,Pump Room A - Rack 1,Rack0/Slot2,FW-2.3.1,High,"modbus,water,pump,actuator"
