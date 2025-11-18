@@ -1,4 +1,6 @@
-#!/home/imene/Desktop/GitHub/AegisRec/utils/env/bin/python3
+#!/bin/sh
+'''exec' "/home/imene/Desktop/GitHub/AegisRec/utils/MITRE ATTACK for ICS Conversion to Knowledge Graph/env/bin/python" "$0" "$@"
+' '''
 # -*- coding: utf-8 -*-
 import re
 import sys
