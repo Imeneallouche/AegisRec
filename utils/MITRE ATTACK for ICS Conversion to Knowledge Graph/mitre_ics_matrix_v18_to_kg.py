@@ -779,7 +779,7 @@ def main():
     NEO4J_URI = "neo4j+s://77d567c6.databases.neo4j.io"
     NEO4J_USERNAME = "neo4j"
     NEO4J_PASSWORD = "2R3cG5YrBs79WDKkGGXUdRrcFB9h65WQoxN6_3QrtBo"
-    EXCEL_FILE = "ics-attack-v18.0.xlsx"
+    EXCEL_FILE = "input/ics-attack-v18.0.xlsx"
     
     # Create builder instance
     builder = MITREKnowledgeGraphBuilder(

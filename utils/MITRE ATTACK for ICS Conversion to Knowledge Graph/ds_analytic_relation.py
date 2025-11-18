@@ -148,7 +148,7 @@ def main():
     """Main execution function."""
     
     # Configuration
-    INPUT_FILE = "ics-attack-v18.0.xlsx"  
+    INPUT_FILE = "input/ics-attack-v18.0.xlsx"  
     OUTPUT_FILE = "analytic_detectionstrategy_mapping.xlsx"
     SHEET_NAME = "analytics" 
     

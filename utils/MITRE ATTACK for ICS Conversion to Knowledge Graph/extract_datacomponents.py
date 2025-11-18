@@ -154,7 +154,7 @@ def process_analytics_excel(input_file: str, output_file: str):
 
 if __name__ == "__main__":
     # Configuration
-    INPUT_FILE = "ics-attack-v18.0.xlsx"  
+    INPUT_FILE = "input/ics-attack-v18.0.xlsx"  
     OUTPUT_FILE = "analytics_with_datacomponents.xlsx"
     
     print("MITRE ATT&CK Analytics Data Component Scraper")

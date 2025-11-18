@@ -1,6 +1,6 @@
 """
-MITRE ATT&CK for ICS Knowledge Graph Builder
-Converts Excel file with MITRE ATT&CK ICS data into a Neo4j Knowledge Graph
+MITRE ATT&CK for ICS VERSION 17 Knowledge Graph Builder
+Converts Excel file with MITRE ATT&CK ICS VERSION 17 data into a Neo4j Knowledge Graph
 """
 
 import pandas as pd
@@ -656,7 +656,7 @@ def main():
     NEO4J_URI = "neo4j+s://77d567c6.databases.neo4j.io"
     NEO4J_USERNAME = "neo4j"
     NEO4J_PASSWORD = "2R3cG5YrBs79WDKkGGXUdRrcFB9h65WQoxN6_3QrtBo" 
-    EXCEL_FILE = "ics-attack-v17.1.xlsx" 
+    EXCEL_FILE = "input/ics-attack-v17.1.xlsx" 
 
     print("""
     ╔══════════════════════════════════════════════════════════════╗
