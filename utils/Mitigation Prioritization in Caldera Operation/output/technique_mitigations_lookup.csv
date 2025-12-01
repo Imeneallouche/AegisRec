@@ -1,0 +1,14 @@
+Technique_ID,Mitigation_ID,Mitigation_Name
+T0840,M0816,Mitigation Limited or Not Effective
+T0861,M0801,Access Management
+T0861,M0800,Authorization Enforcement
+T0861,M0802,Communication Authenticity
+T0861,M0937,Filter Network Traffic
+T0861,M0804,Human User Authentication
+T0861,M0807,Network Allowlists
+T0861,M0930,Network Segmentation
+T0861,M0813,Software Process and Device Authentication
+T0836,M0947,Audit
+T0836,M0800,Authorization Enforcement
+T0836,M0804,Human User Authentication
+T0836,M0818,Validate Program Inputs
