@@ -621,8 +621,7 @@ class MITREAttackKGBuilder:
         
         with self.driver.session() as session:
             # Count nodes
-            node_types = ['Technique', 'Tactic', 'Software', 'Group', 'Campaign', 
-                         'Asset', 'Mitigation', 'DataSource']
+            node_types = ['Technique', 'Tactic', 'Software', 'Group', 'Campaign', 'Asset', 'Mitigation', 'DataSource']
             
             for node_type in node_types:
                 result = session.run(f"MATCH (n:{node_type}) RETURN count(n) as count")
