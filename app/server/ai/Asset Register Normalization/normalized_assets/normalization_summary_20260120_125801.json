@@ -1,0 +1,14 @@
+{
+  "timestamp": "20260120_125801",
+  "input_file": "asset_register.xlsx",
+  "total_sheets_processed": 11,
+  "assets_normalized": {
+    "physical_devices": 0,
+    "virtual_machines": 0,
+    "network_interfaces": 0,
+    "ip_addresses": 0,
+    "connections": 0,
+    "other": 0
+  },
+  "output_files": {}
+}

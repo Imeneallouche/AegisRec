@@ -10,7 +10,7 @@ import Settings from "./pages/settings";
 
 function App() {
   return (
-    <div className="App w-screen h-screen">
+    <div className="App min-h-screen">
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/Dashboard" element={<Dashboard />} />
