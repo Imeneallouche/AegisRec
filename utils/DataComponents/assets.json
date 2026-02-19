@@ -1,0 +1,117 @@
+[
+    {
+        "id": "asset-plc-01",
+        "name": "plc",
+        "type": "programmable_logic_controller",
+        "ip_address": "192.168.95.2",
+        "location": "ICS Zone",
+        "manufacturer": "Siemens",
+        "model": "S7-1500",
+        "protocols": [
+            "S7COMM",
+            "Modbus"
+        ],
+        "criticality": "critical",
+        "tags": [
+            "ics",
+            "plc",
+            "controller",
+            "critical_asset"
+        ]
+    },
+    {
+        "id": "asset-hmi-01",
+        "name": "hmi",
+        "type": "human_machine_interface",
+        "ip_address": "192.168.90.107",
+        "location": "DMZ Zone",
+        "manufacturer": "Wonderware",
+        "model": "InTouch",
+        "criticality": "high",
+        "tags": [
+            "ics",
+            "hmi",
+            "scada",
+            "interface"
+        ]
+    },
+    {
+        "id": "asset-ews-01",
+        "name": "ews",
+        "type": "engineering_workstation",
+        "ip_address": "192.168.95.5",
+        "location": "ICS Zone",
+        "manufacturer": "Generic",
+        "model": "Linux Workstation",
+        "criticality": "high",
+        "tags": [
+            "ics",
+            "ews",
+            "workstation",
+            "engineering"
+        ]
+    },
+    {
+        "id": "asset-router-01",
+        "name": "router",
+        "type": "network_router",
+        "ip_address": "192.168.95.200",
+        "location": "Network Perimeter",
+        "manufacturer": "Cisco",
+        "model": "ISR 4000",
+        "criticality": "critical",
+        "tags": [
+            "network",
+            "router",
+            "firewall",
+            "perimeter"
+        ]
+    },
+    {
+        "id": "asset-simulation-01",
+        "name": "simulation",
+        "type": "simulation_server",
+        "ip_address": "192.168.95.10",
+        "location": "ICS Zone",
+        "manufacturer": "Generic",
+        "model": "Simulation Server",
+        "criticality": "medium",
+        "tags": [
+            "ics",
+            "simulation",
+            "training"
+        ]
+    },
+    {
+        "id": "asset-kali-01",
+        "name": "kali",
+        "type": "attack_platform",
+        "ip_address": "192.168.90.6",
+        "location": "DMZ Zone",
+        "manufacturer": "Offensive Security",
+        "model": "Kali Linux",
+        "criticality": "adversary",
+        "tags": [
+            "attacker",
+            "kali",
+            "adversary",
+            "pentest"
+        ]
+    },
+    {
+        "id": "asset-caldera-01",
+        "name": "caldera",
+        "type": "attack_simulation",
+        "ip_address": "192.168.90.250",
+        "location": "DMZ Zone",
+        "manufacturer": "MITRE",
+        "model": "CALDERA",
+        "criticality": "adversary",
+        "tags": [
+            "attacker",
+            "caldera",
+            "adversary",
+            "simulation"
+        ]
+    }
+]

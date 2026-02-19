@@ -26,7 +26,6 @@ export default function AssetInventory() {
         <div className="h-screen bg-slate-50 text-slate-800">
             <div className="flex h-full">
                 <Sidebar activeIndex={1} />
-
                 <main className="flex-1 flex flex-col p-8">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
@@ -44,7 +43,7 @@ export default function AssetInventory() {
                         </div>
                     </div>
 
-                    {/* ✨ Growable Content */}
+                    {/*  Growable Content */}
                     <div className="flex-1 flex flex-col bg-gray-50 rounded-lg p-4 overflow-auto">
                         {isLoading ? (
                             <div className="flex items-center justify-center h-full">
@@ -59,7 +58,6 @@ export default function AssetInventory() {
                             <NetworkArchitectureDiagram assetRegister={assetRegisterState} />
                         )}
                     </div>
-
                     {/* Footer */}
                     <footer className="bg-white border-t border-gray-200 py-4 mt-6">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between text-sm text-gray-500">
@@ -77,6 +75,5 @@ export default function AssetInventory() {
                 </main>
             </div>
         </div>
-
     );
 }

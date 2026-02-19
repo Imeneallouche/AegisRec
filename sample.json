@@ -1,0 +1,67 @@
+{
+    "@timestamp": "2026-01-30T13:24:43.952Z",
+    "@metadata": {
+        "beat": "filebeat",
+        "type": "_doc",
+        "version": "8.10.0"
+    },
+    "stream": "stderr",
+    "message": "172.18.0.1 - - [30/Jan/2026 13:24:43] \"POST /upload-program HTTP/1.1\" 200 -",
+    "input": {
+        "type": "container"
+    },
+    "container": {
+        "image": {
+            "name": "tuttas/openplc_v3:latest"
+        },
+        "id": "0f88261acb08a37f3f83a26695a88e8ba3a61fbcc7f5c0dd2ec0c96e7111aa33",
+        "name": "openplc1",
+        "labels": {
+            "service_type": "ics_device",
+            "com_docker_compose_container-number": "1",
+            "com_docker_compose_project_config_files": "docker-compose.yml",
+            "com_docker_compose_project_working_dir": "/home/imene/ics-site",
+            "com_docker_compose_version": "1.29.2",
+            "com_docker_compose_service": "openplc1",
+            "com_docker_compose_oneoff": "False",
+            "co_elastic_logs/enabled": "true",
+            "com_docker_compose_config-hash": "901501dbad62ac4598c365651d6972d8a359c62ffc376a62952656350a1fd9f9",
+            "com_docker_compose_project": "ics-site"
+        }
+    },
+    "agent": {
+        "version": "8.10.0",
+        "ephemeral_id": "2a22e848-dccf-4a9e-b3f9-df3690b24c01",
+        "id": "f1c199a5-23b4-4272-a3d3-993d14422dba",
+        "name": "a9ee529b7646",
+        "type": "filebeat"
+    },
+    "ecs": {
+        "version": "8.0.0"
+    },
+    "log": {
+        "file": {
+            "path": "/var/lib/docker/containers/0f88261acb08a37f3f83a26695a88e8ba3a61fbcc7f5c0dd2ec0c96e7111aa33/0f88261acb08a37f3f83a26695a88e8ba3a61fbcc7f5c0dd2ec0c96e7111aa33-json.log"
+        },
+        "offset": 5867
+    },
+    "docker": {
+        "container": {
+            "labels": {
+                "service_type": "ics_device",
+                "com_docker_compose_project_working_dir": "/home/imene/ics-site",
+                "com_docker_compose_project": "ics-site",
+                "com_docker_compose_service": "openplc1",
+                "com_docker_compose_version": "1.29.2",
+                "com_docker_compose_config-hash": "901501dbad62ac4598c365651d6972d8a359c62ffc376a62952656350a1fd9f9",
+                "com_docker_compose_project_config_files": "docker-compose.yml",
+                "co_elastic_logs/enabled": "true",
+                "com_docker_compose_oneoff": "False",
+                "com_docker_compose_container-number": "1"
+            }
+        }
+    },
+    "host": {
+        "name": "a9ee529b7646"
+    }
+}
