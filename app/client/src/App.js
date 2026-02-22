@@ -7,6 +7,7 @@ import Alerts from "./pages/alerts";
 import { Routes, Route } from "react-router-dom";
 import Monitoring from "./pages/monitoring";
 import Settings from "./pages/settings";
+import AssetRegister from "./pages/assetRegister";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/AssetRegister" element={<AssetRegister />} />
         <Route path="/AssetInventory" element={<AssetInventory />} />
         <Route path="/TTPs" element={<TTPs />} />
         <Route path="/Mitigations" element={<Mitigations />} />

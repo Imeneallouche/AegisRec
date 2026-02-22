@@ -54,7 +54,7 @@
     },
     "collection_measures": {
         "windows": {
-            "event_logging": [
+            "event_logs": [
                 {
                     "source": "Sysmon",
                     "event_id": "7",

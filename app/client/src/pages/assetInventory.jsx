@@ -25,7 +25,7 @@ export default function AssetInventory() {
     return (
         <div className="h-screen bg-slate-50 text-slate-800">
             <div className="flex h-full">
-                <Sidebar activeIndex={1} />
+                <Sidebar activeIndex={2} />
                 <main className="flex-1 flex flex-col p-8">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">

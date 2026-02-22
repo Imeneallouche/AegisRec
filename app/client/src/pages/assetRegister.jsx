@@ -1,15 +1,15 @@
 import Sidebar from '../components/sidebar';
 
-export default function Monitoring() {
+export default function AssetRegister() {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800">
             <div className="flex">
-                <Sidebar activeIndex={6}/>
+                <Sidebar activeIndex={1}/>
                 <main className="flex-1 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h1 className="text-2xl font-bold">Log Monitoring</h1>
-                            <p className="text-sm text-slate-500">Check logs generated in real time by your ICS Assets</p>
+                            <h1 className="text-2xl font-bold">Asset Register</h1>
+                            <p className="text-sm text-slate-500">Indicate all your Assets and connections between them</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-sm text-slate-500 mr-4">Log out</div>

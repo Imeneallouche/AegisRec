@@ -4,7 +4,7 @@ export default function Mitigations() {
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800">
             <div className="flex">
-                <Sidebar activeIndex={3}/>
+                <Sidebar activeIndex={4}/>
                 <main className="flex-1 p-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
