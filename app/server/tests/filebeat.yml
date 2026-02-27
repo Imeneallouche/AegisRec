@@ -1,0 +1,353 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+# 1. Docker Autodiscover with Enhanced Tagging
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            contains:
+              docker.container.image: fortiphyd
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "${data.docker.container.name}"
+                observer_type: "ics_component"
+                platform: "linux"
+                environment: "ics_ot"
+              fields_under_root: true
+              tags:
+                - "container"
+                - "ics"
+                - "ot"
+                - "${data.docker.container.name}"
+                - "platform_linux"
+
+        # Specific template for PLC
+        - condition:
+            equals:
+              docker.container.name: "plc"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "plc"
+                observer_type: "plc"
+                device_type: "programmable_logic_controller"
+                platform: "ics_linux"
+                environment: "ics_ot"
+                mitre_ics_tactic: "TA0100"
+              fields_under_root: true
+              tags:
+                - "plc"
+                - "ics"
+                - "ot"
+                - "platform_ics_linux"
+                - "device_controller"
+
+        # Specific template for HMI
+        - condition:
+            equals:
+              docker.container.name: "hmi"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "hmi"
+                observer_type: "hmi"
+                device_type: "human_machine_interface"
+                platform: "ics_linux"
+                environment: "ics_ot"
+                mitre_ics_tactic: "TA0100"
+              fields_under_root: true
+              tags:
+                - "hmi"
+                - "scada"
+                - "ics"
+                - "ot"
+                - "platform_ics_linux"
+                - "device_interface"
+
+        # Specific template for EWS
+        - condition:
+            equals:
+              docker.container.name: "ews"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "ews"
+                observer_type: "engineering_workstation"
+                device_type: "workstation"
+                platform: "linux"
+                environment: "ics_ot"
+                mitre_ics_tactic: "TA0100"
+              fields_under_root: true
+              tags:
+                - "ews"
+                - "workstation"
+                - "ics"
+                - "ot"
+                - "platform_linux"
+                - "device_workstation"
+
+        # Specific template for Router
+        - condition:
+            equals:
+              docker.container.name: "router"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "router"
+                observer_type: "network_device"
+                device_type: "router_firewall"
+                platform: "network"
+                environment: "ics_ot"
+                mitre_ics_tactic: "TA0100"
+              fields_under_root: true
+              tags:
+                - "router"
+                - "network"
+                - "firewall"
+                - "ics"
+                - "ot"
+                - "platform_network"
+
+        # Specific template for Attacker (Kali)
+        - condition:
+            equals:
+              docker.container.name: "kali"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              fields:
+                observer_name: "kali"
+                observer_type: "attacker"
+                device_type: "penetration_testing"
+                platform: "linux"
+                environment: "adversary"
+                mitre_ics_tactic: "TA0101"
+              fields_under_root: true
+              tags:
+                - "kali"
+                - "attacker"
+                - "adversary"
+                - "platform_linux"
+                - "role_attack"
+
+# 2. Network Alerts (Router/Suricata) with Enhanced Fields
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/router/eve.json
+    json.keys_under_root: true
+    json.overwrite_keys: true
+    json.expand_keys: true
+    json.add_error_key: true
+    fields:
+      observer_name: "router"
+      observer_type: "network_device"
+      device_type: "router_firewall"
+      platform: "network"
+      environment: "ics_ot"
+      log_type: "network_alert"
+      log_source: "suricata"
+      mitre_ics_tactic: "TA0100"
+    fields_under_root: true
+    tags:
+      - "suricata"
+      - "network"
+      - "ids_ips"
+      - "platform_network"
+      - "log_type_alert"
+      - "source_suricata"
+
+# 3. Host Security Logs (EWS) with Enhanced Parsing
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/ews/auth.log
+    fields:
+      observer_name: "ews"
+      observer_type: "engineering_workstation"
+      device_type: "workstation"
+      platform: "linux"
+      environment: "ics_ot"
+      log_type: "authentication"
+      log_source: "auth_log"
+      mitre_ics_tactic: "TA0100"
+    fields_under_root: true
+    tags:
+      - "host_logs"
+      - "ews"
+      - "auth"
+      - "platform_linux"
+      - "log_type_auth"
+      - "source_auth_log"
+
+# 4. Additional ICS Logs - Simulation
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/simulation/*.log
+    fields:
+      observer_name: "simulation"
+      observer_type: "ics_simulation"
+      device_type: "simulation_server"
+      platform: "ics_linux"
+      environment: "ics_ot"
+      log_type: "application"
+      log_source: "simulation_log"
+      mitre_ics_tactic: "TA0100"
+    fields_under_root: true
+    tags:
+      - "simulation"
+      - "ics"
+      - "ot"
+      - "platform_ics_linux"
+      - "log_type_application"
+      - "source_simulation"
+
+# 5. Additional ICS Logs - PLC (if available)
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/plc/*.log
+    fields:
+      observer_name: "plc"
+      observer_type: "plc"
+      device_type: "programmable_logic_controller"
+      platform: "ics_linux"
+      environment: "ics_ot"
+      log_type: "plc_log"
+      log_source: "plc_log"
+      mitre_ics_tactic: "TA0100"
+    fields_under_root: true
+    tags:
+      - "plc"
+      - "ics"
+      - "ot"
+      - "platform_ics_linux"
+      - "log_type_plc"
+      - "device_controller"
+
+# 6. System Logs from all devices
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/*/syslog
+      - /shared_logs/*/messages
+    fields:
+      log_type: "system"
+      log_source: "syslog"
+      platform: "linux"
+    fields_under_root: true
+    tags:
+      - "syslog"
+      - "system"
+      - "platform_linux"
+      - "log_type_system"
+
+# 7. Process Execution Logs
+  - type: log
+    enabled: true
+    paths:
+      - /shared_logs/*/process.log
+    fields:
+      log_type: "process"
+      log_source: "process_log"
+    fields_under_root: true
+    tags:
+      - "process"
+      - "execution"
+      - "log_type_process"
+
+# Processors for log enrichment
+processors:
+  # Add host metadata
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+
+  # Add cloud metadata (if in cloud)
+  - add_cloud_metadata: ~
+
+  # Add Docker metadata for container logs
+  - add_docker_metadata: ~
+
+  # Add Kubernetes metadata (if applicable)
+  - add_kubernetes_metadata: ~
+
+  # Decode JSON fields
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+
+  # Rename fields to ECS standard
+  - rename:
+      fields:
+        - from: "host.name"
+          to: "host.hostname"
+        - from: "log_type"
+          to: "event.category"
+        - from: "observer_name"
+          to: "observer.name"
+        - from: "observer_type"
+          to: "observer.type"
+        - from: "device_type"
+          to: "device.type"
+        - from: "environment"
+          to: "environment.type"
+
+  # Add @timestamp from log timestamp if available
+  - timestamp:
+      field: "timestamp"
+      layouts:
+        - "2006-01-02T15:04:05.999Z"
+        - "2006-01-02 15:04:05"
+        - "Jan 2 15:04:05"
+      test:
+        - "2024-01-01T12:00:00.123Z"
+
+# Output to Logstash
+output.logstash:
+  hosts: ["logstash:5044"]
+  compression_level: 3
+  ssl.enabled: false
+
+# Optional: Output to Elasticsearch directly (for debugging)
+#output.elasticsearch:
+#  hosts: ["elasticsearch:9200"]
+#  indices:
+#    - index: "grfics-logs-%{+yyyy.MM.dd}"
+#      when.equals:
+#        observer_type: "ics_component"
+#    - index: "grfics-network-%{+yyyy.MM.dd}"
+#      when.contains:
+#        tags: "network"
+#    - index: "grfics-security-%{+yyyy.MM.dd}"
+#      when.equals:
+#        event.category: "authentication"
+
+# Setup Kibana dashboards
+setup.kibana:
+  host: "kibana:5601"
+  setup.dashboards.enabled: true
+
+# Monitoring
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["elasticsearch:9200"]
