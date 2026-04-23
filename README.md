@@ -1,2 +1,2 @@
 # AegisRec
-AegisRec is a generative AI-based recommendation system for proactive ICS/OT security
+ AegisRec is a Recommendation system that generates personalized detection and mitigation measures for industrial (ICS/OT) environments based on the MITRE ATT&CK for ICS framework. 
