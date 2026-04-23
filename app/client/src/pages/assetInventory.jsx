@@ -38,7 +38,7 @@ export default function AssetInventory() {
                         <div className="flex items-center gap-4">
                             <div className="text-sm text-slate-500 mr-4">Log out</div>
                             <button className="px-4 py-2 bg-slate-900 text-white rounded-lg">
-                                ICS Site name
+                                GRFICSv3
                             </button>
                         </div>
                     </div>
