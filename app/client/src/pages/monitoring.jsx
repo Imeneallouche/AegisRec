@@ -7,13 +7,9 @@ import LogStream from "../components/detection/LogStream";
 import AlertDetailDrawer from "../components/detection/AlertDetailDrawer";
 import { IconNavLogs } from "../data/icons";
 import { Files, AlertCircle, Cpu, ShieldAlert } from "lucide-react";
-import {
-  LOGS,
-  ALERTS,
-  ASSETS,
-  DATA_COMPONENTS,
-  assetOf,
-} from "../data/detectionSample";
+import { ASSETS, DATA_COMPONENTS, assetOf } from "../data/detectionSample";
+import { useEngine } from "../context/EngineContext";
+import EngineOfflineState from "../components/ui/EngineOfflineState";
 
 const LEVEL_OPTIONS = [
   { value: "all", label: "All" },
@@ -23,6 +19,10 @@ const LEVEL_OPTIONS = [
 ];
 
 export default function Monitoring() {
+  const { data, health, isConnected } = useEngine();
+  const LOGS = React.useMemo(() => data.logs || [], [data.logs]);
+  const ALERTS = React.useMemo(() => data.alerts || [], [data.alerts]);
+
   const [level, setLevel] = React.useState("all");
   const [asset, setAsset] = React.useState("all");
   const [dc, setDc] = React.useState("all");
@@ -32,7 +32,7 @@ export default function Monitoring() {
 
   const sortedLogs = React.useMemo(
     () => [...LOGS].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)),
-    []
+    [LOGS]
   );
 
   const filtered = React.useMemo(() => {
@@ -55,7 +55,7 @@ export default function Monitoring() {
       counts[l.source] = (counts[l.source] || 0) + 1;
     });
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, []);
+  }, [LOGS]);
 
   const correlatedCount = LOGS.filter((l) => !!l.alertId).length;
 
@@ -64,6 +64,18 @@ export default function Monitoring() {
     if (a) setDrawerAlert(a);
   };
 
+  if (!isConnected) {
+    return (
+      <PageShell
+        title="Log monitoring"
+        subtitle="Normalised ingestion feed that powers the detection engine"
+        icon={IconNavLogs}
+      >
+        <EngineOfflineState />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       title="Log monitoring"
@@ -71,12 +83,12 @@ export default function Monitoring() {
       icon={IconNavLogs}
       fullHeight
     >
-      <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatCard title="Events ingested" value={LOGS.length} icon={Files} tone="indigo" />
         <StatCard
           title="Correlated to alerts"
           value={correlatedCount}
-          hint={`${Math.round((correlatedCount / LOGS.length) * 100)}% of feed`}
+          hint={LOGS.length ? `${Math.round((correlatedCount / LOGS.length) * 100)}% of feed` : "no logs"}
           icon={AlertCircle}
           tone="rose"
         />
@@ -90,7 +102,7 @@ export default function Monitoring() {
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <SearchInput
             value={query}
@@ -149,82 +161,69 @@ export default function Monitoring() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[1fr,18rem]">
-        <div className="min-h-0">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 xl:grid-cols-[1fr,20rem]">
+        <div className="flex min-h-0 flex-col gap-3">
           <LogStream
             logs={paused ? [] : filtered}
             onInspectAlert={openAlertById}
           />
           {paused ? (
-            <div className="mt-2 rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-3 text-center text-xs text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-3 text-center text-xs text-slate-500">
               Stream paused. Resume to see incoming events.
             </div>
           ) : null}
         </div>
-        <aside className="space-y-4">
-          <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60">
+        <aside className="space-y-5">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
             <h3 className="mb-3 text-sm font-semibold text-slate-900">Top sources</h3>
-            <ul className="space-y-2">
-              {bySource.slice(0, 6).map(([src, n]) => (
-                <li key={src} className="flex items-center justify-between text-xs">
-                  <span className="truncate font-mono text-slate-700">{src}</span>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">{n}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60">
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">Top talkers (assets)</h3>
-            <ul className="space-y-2 text-xs">
-              {Object.entries(
-                LOGS.reduce((acc, l) => {
-                  acc[l.assetId] = (acc[l.assetId] || 0) + 1;
-                  return acc;
-                }, {})
-              )
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 6)
-                .map(([id, n]) => (
-                  <li key={id} className="flex items-center justify-between">
-                    <span className="truncate text-slate-700">{assetOf(id).name}</span>
+            {bySource.length === 0 ? (
+              <p className="text-xs text-slate-500">No events yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {bySource.slice(0, 6).map(([src, n]) => (
+                  <li key={src} className="flex items-center justify-between text-xs">
+                    <span className="truncate font-mono text-slate-700">{src}</span>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">{n}</span>
                   </li>
                 ))}
-            </ul>
+              </ul>
+            )}
           </section>
-          <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60">
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">Top talkers (assets)</h3>
+            {LOGS.length === 0 ? (
+              <p className="text-xs text-slate-500">No events yet.</p>
+            ) : (
+              <ul className="space-y-2 text-xs">
+                {Object.entries(
+                  LOGS.reduce((acc, l) => {
+                    acc[l.assetId] = (acc[l.assetId] || 0) + 1;
+                    return acc;
+                  }, {})
+                )
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([id, n]) => (
+                    <li key={id} className="flex items-center justify-between">
+                      <span className="truncate text-slate-700">{assetOf(id).name}</span>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">{n}</span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+          <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
             <h3 className="mb-3 text-sm font-semibold text-slate-900">Ingestion pipeline</h3>
-            <ul className="space-y-2 text-xs text-slate-700">
-              <li className="flex items-center justify-between">
-                <span>Filebeat</span>
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> online
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span>Suricata</span>
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> online
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span>Logstash</span>
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> online
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span>Elasticsearch</span>
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> green
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span>Detection engine</span>
-                <span className="inline-flex items-center gap-1 text-emerald-600">
-                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> polling
-                </span>
-              </li>
+            <ul className="space-y-2.5 text-xs text-slate-700">
+              <PipelineRow label="Filebeat" ok />
+              <PipelineRow label="Suricata" ok />
+              <PipelineRow label="Logstash" ok />
+              <PipelineRow label="Elasticsearch" ok />
+              <PipelineRow
+                label="Detection engine"
+                ok={!!health?.ok}
+                value={health?.ok ? "polling" : "idle"}
+              />
             </ul>
           </section>
         </aside>
@@ -236,5 +235,17 @@ export default function Monitoring() {
         onClose={() => setDrawerAlert(null)}
       />
     </PageShell>
+  );
+}
+
+function PipelineRow({ label, ok = true, value }) {
+  return (
+    <li className="flex items-center justify-between">
+      <span>{label}</span>
+      <span className={`inline-flex items-center gap-1 ${ok ? "text-emerald-600" : "text-rose-600"}`}>
+        <span className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-emerald-500" : "bg-rose-500"}`} />
+        {value || (ok ? "online" : "offline")}
+      </span>
+    </li>
   );
 }

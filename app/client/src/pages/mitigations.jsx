@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   BookOpen,
 } from "lucide-react";
-import { MITIGATIONS } from "../data/detectionSample";
+import { useEngine } from "../context/EngineContext";
+import EngineOfflineState from "../components/ui/EngineOfflineState";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -51,6 +52,9 @@ const PRIORITY_LABEL = {
 };
 
 export default function Mitigations() {
+  const { data, isConnected } = useEngine();
+  const MITIGATIONS = React.useMemo(() => data.mitigations || [], [data.mitigations]);
+
   const [status, setStatus] = React.useState("all");
   const [priority, setPriority] = React.useState("all");
   const [query, setQuery] = React.useState("");
@@ -79,7 +83,7 @@ export default function Mitigations() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [status, priority, query]);
+  }, [status, priority, query, MITIGATIONS]);
 
   const grouped = React.useMemo(() => groupByPriority(filtered), [filtered]);
 
@@ -88,13 +92,25 @@ export default function Mitigations() {
   const kgGrounded = MITIGATIONS.filter((m) => !!m.kgMitigationId).length;
   const kgCoverage = MITIGATIONS.length ? kgGrounded / MITIGATIONS.length : 0;
 
+  if (!isConnected) {
+    return (
+      <PageShell
+        title="Mitigations"
+        subtitle="KG-grounded, LLM-generated mitigation plans (Layer D) — reviewed and tracked to implementation"
+        icon={IconNavShield}
+      >
+        <EngineOfflineState />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell
       title="Mitigations"
       subtitle="KG-grounded, LLM-generated mitigation plans (Layer D) — reviewed and tracked to implementation"
       icon={IconNavShield}
     >
-      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatCard
           title="Total plans"
           value={MITIGATIONS.length}
@@ -122,7 +138,7 @@ export default function Mitigations() {
         />
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60 lg:flex-row lg:items-center lg:justify-between">
         <SearchInput
           value={query}
           onChange={setQuery}
@@ -142,17 +158,17 @@ export default function Mitigations() {
           description="Try ‘All’ for both status and priority, or clear the search term."
         />
       ) : (
-        <div className="space-y-7">
+        <div className="space-y-8">
           {grouped.map(([prio, items]) => (
             <section key={prio}>
-              <div className="mb-3 flex items-center gap-3">
+              <div className="mb-4 flex items-center gap-3">
                 <h2 className="text-sm font-semibold text-slate-900">{PRIORITY_LABEL[prio]}</h2>
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-600">
                   {items.length}
                 </span>
                 <div className="h-px flex-1 bg-slate-100" />
               </div>
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
                 {items.map((m) => (
                   <MitigationCard
                     key={m.id}

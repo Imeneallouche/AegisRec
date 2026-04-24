@@ -56,6 +56,7 @@ const NAV_SECTIONS = [
     id: "system",
     label: "System",
     items: [
+      { to: "/Documentation", title: "Documentation", icon: IconNavBook },
       { to: "/Settings", title: "Settings", icon: IconNavSettings },
     ],
   },
@@ -63,7 +64,7 @@ const NAV_SECTIONS = [
 
 function navItemClassName({ isActive }) {
   return [
-    "group flex w-full min-w-0 items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium leading-snug transition-all duration-150",
+    "group flex w-full min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium leading-snug transition-all duration-150",
     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500",
     isActive
       ? "bg-indigo-50 text-indigo-800 shadow-sm ring-1 ring-indigo-100/80"
@@ -80,40 +81,45 @@ function navIconClassName(isActive) {
   ].join(" ");
 }
 
+/**
+ * The sidebar renders inside a `sticky top-0` wrapper so it stays pinned to the
+ * viewport while the main content area scrolls.  `h-screen` locks its height
+ * to the viewport so the inner `overflow-y-auto` nav handles its own scroll.
+ */
 export default function Sidebar() {
   return (
     <aside
-      className="flex h-screen w-[min(18rem,100%)] flex-shrink-0 flex-col border-r border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/40 shadow-[1px_0_0_0_rgba(15,23,42,0.04)]"
+      className="sticky top-0 flex h-screen w-[min(18rem,100%)] flex-shrink-0 flex-col self-start border-r border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/40 shadow-[1px_0_0_0_rgba(15,23,42,0.04)]"
       aria-label="Main navigation"
     >
-      <div className="flex min-h-0 flex-1 flex-col px-3 py-4 sm:px-4 sm:py-5">
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-5 sm:px-5 sm:py-6">
         {/* Brand */}
-        <div className="mb-5 flex items-center gap-3 px-1 sm:mb-6">
+        <div className="mb-6 flex items-center gap-3 px-1 sm:mb-7">
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-base font-bold text-white shadow-sm ring-1 ring-indigo-600/20"
             aria-hidden
           >
-            G
+            A
           </div>
           <div className="min-w-0">
             <div className="truncate text-[0.95rem] font-semibold leading-tight tracking-tight text-slate-900">
-              ICS Security
+              AegisRec
             </div>
-            <div className="text-xs font-medium text-slate-500">Admin portal</div>
+            <div className="text-xs font-medium text-slate-500">ICS / OT analyst portal</div>
           </div>
         </div>
 
-        {/* Nav — scrolls if viewport is short */}
+        {/* Nav */}
         <nav
-          className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overflow-x-hidden overscroll-y-contain pb-2 [-ms-overflow-style:none] [scrollbar-gutter:stable] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200/80"
+          className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overflow-x-hidden overscroll-y-contain pb-2 [-ms-overflow-style:none] [scrollbar-gutter:stable] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200/80"
           aria-label="Application sections"
         >
           {NAV_SECTIONS.map((section) => (
             <div key={section.id}>
-              <p className="mb-1.5 px-2 text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">
+              <p className="mb-2 px-2 text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">
                 {section.label}
               </p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -145,20 +151,20 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* Help — pinned to bottom of column */}
-        <div className="mt-4 shrink-0 border-t border-slate-200/80 pt-4">
-          <div className="rounded-xl border border-slate-200/70 bg-slate-50/90 p-3.5 shadow-sm ring-1 ring-slate-100/50">
+        {/* Help */}
+        <div className="mt-5 shrink-0 border-t border-slate-200/80 pt-5">
+          <div className="rounded-xl border border-slate-200/70 bg-slate-50/90 p-4 shadow-sm ring-1 ring-slate-100/50">
             <p className="text-sm font-semibold text-slate-800">Need help?</p>
-            <p className="mt-1 text-xs leading-relaxed text-slate-500">
-              Contact support or read the product documentation.
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+              Read the operator guide or contact support.
             </p>
-            <button
-              type="button"
+            <NavLink
+              to="/Documentation"
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             >
               <IconNavBook className="h-4 w-4" />
               Documentation
-            </button>
+            </NavLink>
           </div>
         </div>
       </div>

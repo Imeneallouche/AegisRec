@@ -4,18 +4,16 @@ import TacticChip, { TechniqueChip, AssetChip } from "./TacticChip";
 import { SeverityBadge, StatusBadge } from "../ui/Badge";
 import ConfidenceBar from "../ui/ConfidenceBar";
 import { formatDateTime, formatPct } from "../ui/formatters";
-import {
-  getAlertsForChain,
-  getMitigationsForChain,
-  assetOf,
-} from "../../data/detectionSample";
+import { assetOf } from "../../data/detectionSample";
+import { useEngine } from "../../context/EngineContext";
 import { MiniAlertRow } from "./AlertsTable";
 import MitigationCard from "./MitigationCard";
 
 export default function ChainDetailDrawer({ chain, open, onClose, onOpenAlert, onOpenMitigation }) {
+  const { data } = useEngine();
   if (!chain) return null;
-  const alerts = getAlertsForChain(chain.id);
-  const mitigations = getMitigationsForChain(chain.id);
+  const alerts = data.alerts.filter((a) => a.chainId === chain.id);
+  const mitigations = data.mitigations.filter((m) => m.chainId === chain.id);
 
   return (
     <Drawer

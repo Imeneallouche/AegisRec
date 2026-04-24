@@ -10,8 +10,9 @@ import ChainDetailDrawer from "../components/detection/ChainDetailDrawer";
 import AlertDetailDrawer from "../components/detection/AlertDetailDrawer";
 import MitigationDetailDrawer from "../components/detection/MitigationDetailDrawer";
 import { IconNavTtp } from "../data/icons";
-import { CHAINS, getChainById } from "../data/detectionSample";
 import { Target } from "lucide-react";
+import { useEngine } from "../context/EngineContext";
+import EngineOfflineState from "../components/ui/EngineOfflineState";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -24,6 +25,9 @@ export default function TTPs() {
   const location = useLocation();
   const deepLinkId = location.state?.chainId;
 
+  const { data, isConnected } = useEngine();
+  const CHAINS = React.useMemo(() => data.chains || [], [data.chains]);
+
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [query, setQuery] = React.useState("");
   const [selected, setSelected] = React.useState(null);
@@ -32,10 +36,10 @@ export default function TTPs() {
 
   React.useEffect(() => {
     if (deepLinkId) {
-      const c = getChainById(deepLinkId);
+      const c = CHAINS.find((ch) => ch.id === deepLinkId);
       if (c) setSelected(c);
     }
-  }, [deepLinkId]);
+  }, [deepLinkId, CHAINS]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -54,7 +58,19 @@ export default function TTPs() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [statusFilter, query]);
+  }, [statusFilter, query, CHAINS]);
+
+  if (!isConnected) {
+    return (
+      <PageShell
+        title="Attack chains"
+        subtitle="Causal-window Transformer recognitions (Layer B) grouped by kill-chain progression"
+        icon={IconNavTtp}
+      >
+        <EngineOfflineState />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
@@ -62,7 +78,7 @@ export default function TTPs() {
       subtitle="Causal-window Transformer recognitions (Layer B) grouped by kill-chain progression"
       icon={IconNavTtp}
     >
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60 sm:flex-row sm:items-center sm:justify-between">
         <SearchInput
           value={query}
           onChange={setQuery}
@@ -83,7 +99,7 @@ export default function TTPs() {
           description="Try clearing the search term or switching to ‘All’ to see every chain the engine has recognised."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           {filtered.map((c) => (
             <ChainCard key={c.id} chain={c} onOpen={() => setSelected(c)} />
           ))}

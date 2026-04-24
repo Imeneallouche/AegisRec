@@ -41,13 +41,13 @@ export default function Drawer({ open, onClose, title, subtitle, children, width
           open ? "translate-x-0" : "translate-x-full",
         ].join(" ")}
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-100 bg-slate-50/60 px-6 py-5">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold tracking-tight text-slate-900">
               {title}
             </h2>
             {subtitle ? (
-              <p className="mt-0.5 truncate text-xs text-slate-500">{subtitle}</p>
+              <p className="mt-1 truncate text-xs text-slate-500">{subtitle}</p>
             ) : null}
           </div>
           <button
@@ -61,7 +61,7 @@ export default function Drawer({ open, onClose, title, subtitle, children, width
             </svg>
           </button>
         </header>
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-5">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-6">
           {children}
         </div>
       </aside>
@@ -71,8 +71,8 @@ export default function Drawer({ open, onClose, title, subtitle, children, width
 
 export function DrawerSection({ title, action, children }) {
   return (
-    <section className="mb-6 last:mb-0">
-      <div className="mb-2 flex items-center justify-between">
+    <section className="mb-8 last:mb-0">
+      <div className="mb-3 flex items-center justify-between">
         <h3 className="text-[0.7rem] font-semibold uppercase tracking-wider text-slate-500">
           {title}
         </h3>
@@ -85,7 +85,7 @@ export function DrawerSection({ title, action, children }) {
 
 export function DrawerField({ label, value, mono = false }) {
   return (
-    <div className="flex min-w-0 items-start justify-between gap-4 border-b border-slate-100 py-2 last:border-b-0">
+    <div className="flex min-w-0 items-start justify-between gap-4 border-b border-slate-100 py-2.5 last:border-b-0">
       <span className="shrink-0 text-xs font-medium text-slate-500">{label}</span>
       <span
         className={[

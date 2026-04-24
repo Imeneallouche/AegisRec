@@ -10,7 +10,9 @@ import MitigationDetailDrawer from "../components/detection/MitigationDetailDraw
 import EmptyState from "../components/ui/EmptyState";
 import { IconNavBell } from "../data/icons";
 import { Bell, ShieldAlert, ShieldCheck, Activity } from "lucide-react";
-import { ALERTS, tacticOf } from "../data/detectionSample";
+import { tacticOf } from "../data/detectionSample";
+import { useEngine } from "../context/EngineContext";
+import EngineOfflineState from "../components/ui/EngineOfflineState";
 
 const SEVERITY_OPTIONS = [
   { value: "all", label: "All" },
@@ -38,6 +40,9 @@ function countBy(list, key) {
 }
 
 export default function Alerts() {
+  const { data, isConnected } = useEngine();
+  const ALERTS = React.useMemo(() => data.alerts || [], [data.alerts]);
+
   const [severity, setSeverity] = React.useState("all");
   const [triage, setTriage] = React.useState("all");
   const [tacticFilter, setTacticFilter] = React.useState("all");
@@ -52,7 +57,7 @@ export default function Alerts() {
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-  }, []);
+  }, [ALERTS]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,10 +82,22 @@ export default function Alerts() {
         .toLowerCase();
       return hay.includes(q);
     }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  }, [severity, triage, tacticFilter, query]);
+  }, [severity, triage, tacticFilter, query, ALERTS]);
 
   const bySeverity = countBy(ALERTS, "severity");
   const safetyRailTriggers = ALERTS.filter((a) => a.layerA?.usedSafetyRail || a.layerC?.usedSafetyRail).length;
+
+  if (!isConnected) {
+    return (
+      <PageShell
+        title="Alerts"
+        subtitle="Every orchestrated decision (Layer A → B → C) with its reasoning and evidence"
+        icon={IconNavBell}
+      >
+        <EngineOfflineState />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
@@ -89,7 +106,7 @@ export default function Alerts() {
       icon={IconNavBell}
     >
       {/* Top KPIs */}
-      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatCard title="Total alerts" value={ALERTS.length} icon={Bell} tone="indigo" />
         <StatCard title="Critical" value={bySeverity.critical || 0} icon={ShieldAlert} tone="red" />
         <StatCard title="High" value={bySeverity.high || 0} icon={ShieldAlert} tone="rose" />
@@ -97,7 +114,7 @@ export default function Alerts() {
       </div>
 
       {/* Filters */}
-      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm ring-1 ring-slate-100/60">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <SearchInput
             value={query}
@@ -146,7 +163,7 @@ export default function Alerts() {
         </div>
       </div>
 
-      <div className="mb-3 flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-slate-500">
         <span className="inline-flex items-center gap-1">
           <Activity className="h-3.5 w-3.5 text-slate-400" />
           Showing <span className="mx-1 font-semibold text-slate-700">{filtered.length}</span> of {ALERTS.length} alerts

@@ -23,7 +23,7 @@ export default function ChainCard({ chain, onOpen }) {
         }
       }}
     >
-      <div className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50/50 px-5 py-4">
+      <div className="flex items-start gap-3 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50/50 px-6 py-5">
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200/70"
           aria-hidden
@@ -44,8 +44,8 @@ export default function ChainCard({ chain, onOpen }) {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 px-5 py-4">
-        <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
+      <div className="flex-1 space-y-4 px-6 py-5">
+        <p className="line-clamp-3 text-sm leading-7 text-slate-600">
           {chain.summary}
         </p>
 
@@ -61,7 +61,7 @@ export default function ChainCard({ chain, onOpen }) {
         <ConfidenceBar value={chain.confidence} label="Layer B confidence" />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-5 py-3 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/50 px-6 py-3.5 text-xs text-slate-500">
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1">
             <ShieldAlert className="h-3.5 w-3.5 text-rose-500" />

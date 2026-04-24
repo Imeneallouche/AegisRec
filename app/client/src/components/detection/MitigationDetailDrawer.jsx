@@ -2,14 +2,15 @@ import Drawer, { DrawerField, DrawerSection } from "../ui/Drawer";
 import { SeverityBadge, StatusBadge } from "../ui/Badge";
 import { TechniqueChip, AssetChip } from "./TacticChip";
 import { formatDateTime } from "../ui/formatters";
-import { getChainById, ALERTS } from "../../data/detectionSample";
+import { useEngine } from "../../context/EngineContext";
 import { MiniAlertRow } from "./AlertsTable";
 import { CheckCircle2, AlertTriangle, Undo2, BookOpen } from "lucide-react";
 
 export default function MitigationDetailDrawer({ mitigation: m, open, onClose, onOpenAlert, onOpenChain }) {
+  const { data } = useEngine();
   if (!m) return null;
-  const chain = m.chainId ? getChainById(m.chainId) : null;
-  const relatedAlerts = ALERTS.filter((a) => (m.alertIds || []).includes(a.id));
+  const chain = m.chainId ? data.chains.find((c) => c.id === m.chainId) || null : null;
+  const relatedAlerts = data.alerts.filter((a) => (m.alertIds || []).includes(a.id));
 
   return (
     <Drawer

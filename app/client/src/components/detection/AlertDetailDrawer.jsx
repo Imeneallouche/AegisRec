@@ -3,12 +3,8 @@ import TacticChip, { TechniqueChip, DataComponentChip } from "./TacticChip";
 import { SeverityBadge, StatusBadge, TriageBadge } from "../ui/Badge";
 import ConfidenceBar from "../ui/ConfidenceBar";
 import { formatDateTime, formatPct } from "../ui/formatters";
-import {
-  assetOf,
-  getChainById,
-  getLogsForAlert,
-  getMitigationsForChain,
-} from "../../data/detectionSample";
+import { assetOf } from "../../data/detectionSample";
+import { useEngine } from "../../context/EngineContext";
 
 function SectionCard({ children }) {
   return (
@@ -34,11 +30,12 @@ function LayerBadge({ letter, label, tone }) {
 }
 
 export default function AlertDetailDrawer({ alert: a, open, onClose, onOpenChain, onOpenMitigation }) {
+  const { data } = useEngine();
   if (!a) return null;
   const asset = assetOf(a.assetId);
-  const chain = a.chainId ? getChainById(a.chainId) : null;
-  const logs = getLogsForAlert(a.id);
-  const mitigations = (chain ? getMitigationsForChain(chain.id) : []).filter((m) =>
+  const chain = a.chainId ? data.chains.find((c) => c.id === a.chainId) || null : null;
+  const logs = data.logs.filter((l) => l.alertId === a.id);
+  const mitigations = (chain ? data.mitigations.filter((m) => m.chainId === chain.id) : []).filter((m) =>
     (m.alertIds || []).includes(a.id)
   );
 

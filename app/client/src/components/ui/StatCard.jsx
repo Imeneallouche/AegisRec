@@ -27,7 +27,7 @@ export default function StatCard({
       : "text-slate-400";
 
   return (
-    <div className="flex min-w-0 flex-1 items-start justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
+    <div className="flex min-w-0 flex-1 items-start justify-between gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm ring-1 ring-slate-100/60">
       <div className="min-w-0">
         <p className="truncate text-xs font-medium uppercase tracking-wider text-slate-500">
           {title}
