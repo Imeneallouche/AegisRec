@@ -97,7 +97,7 @@ export default function RegisterSheetTabs({ register }) {
   }, [register, active]);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 gap-0">
+    <div className="flex flex-col flex-1 min-h-0 min-w-0 w-full gap-0">
       {/* Tab bar — sheet-like, horizontal scroll on narrow screens */}
       <div
         className="flex items-stretch gap-0 -mb-px border-b border-slate-200 bg-slate-100/80 rounded-t-lg px-1 pt-1 overflow-x-auto scrollbar-thin"
@@ -137,9 +137,9 @@ export default function RegisterSheetTabs({ register }) {
         })}
       </div>
 
-      {/* Sheet content — white “page” like Excel cell area */}
-      <div className="flex-1 min-h-0 bg-white border border-slate-200 border-t-0 rounded-b-lg p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-2">
+      {/* Sheet content — white “page”; inner area flexes so tables get a bounded height */}
+      <div className="flex flex-1 flex-col min-h-0 min-w-0 bg-white border border-slate-200 border-t-0 rounded-b-lg p-4 pt-3 shadow-sm">
+        <div className="mb-3 flex items-center justify-between gap-2 shrink-0">
           <h2 className="text-sm font-semibold text-slate-800">{active.label}</h2>
           {active.type !== "metadata" && Array.isArray(register?.[active.key]) && (
             <span className="text-xs text-slate-500 tabular-nums">
@@ -148,7 +148,9 @@ export default function RegisterSheetTabs({ register }) {
             </span>
           )}
         </div>
-        {panel}
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
+          {panel}
+        </div>
       </div>
     </div>
   );

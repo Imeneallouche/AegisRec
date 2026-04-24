@@ -8,6 +8,7 @@ import { Routes, Route } from "react-router-dom";
 import Monitoring from "./pages/monitoring";
 import Settings from "./pages/settings";
 import AssetRegister from "./pages/assetRegister";
+import AIAssistant from "./pages/aiAssistant";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/Alerts" element={<Alerts />} />
         <Route path="/Monitoring" element={<Monitoring />} />
         <Route path="/Settings" element={<Settings />} />
+        <Route path="/AIAssistant" element={<AIAssistant />} />
       </Routes>
     </div>
   );

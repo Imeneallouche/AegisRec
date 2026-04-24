@@ -11,8 +11,8 @@ export default function AssetRegister() {
   return (
     <div className="h-screen bg-slate-50 text-slate-800 flex flex-col">
       <div className="flex flex-1 min-h-0">
-        <Sidebar activeIndex={1} />
-        <main className="flex-1 flex flex-col p-6 sm:p-8 min-w-0 min-h-0 overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex flex-col p-6 sm:p-8 min-w-0 min-h-0 h-full max-h-full overflow-hidden">
           <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 shrink-0">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Asset Register</h1>
