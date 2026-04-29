@@ -3,9 +3,10 @@ import ChatMessageBubble from "./ChatMessageBubble";
 
 function timeFormatter(ts) {
   try {
-    return new Date(ts).toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
     });
   } catch {
     return "";

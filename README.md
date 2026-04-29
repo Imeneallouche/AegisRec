@@ -11,7 +11,7 @@ This README reflects the **current implementation** in this repository (not a ro
 ### What AegisRec is
 
 - **Site portal**: Each deployment is oriented around a single **ICS/OT site** record (metadata + a JSON **asset register**).
-- **Operational UI**: Dashboards and workflows for **TTPs**, **attack chains**, **alerts**, **mitigations**, **monitoring**, and an **AI assistant** page (assistant replies today are **template-based** over database context; no external LLM is required).
+- **Operational UI**: Dashboards and workflows for **TTPs**, **attack chains**, **alerts**, **mitigations**, **monitoring**, and an **AI assistant** page (assistant replies today are **template-based** over database context; no external LLM is required). Assistant **conversations and messages** are stored per site and listed in the UI.
 - **Dual-backend mental model**:
   - **AegisRec API** (FastAPI, default port **8000**): authentication, asset register, persistence of detection artifacts, and assistant chat endpoint.
   - **Detection engine** (optional, separate process, typically **8090**): MITRE `learning` service providing `/health`, `/snapshot`, scoring, feedback, etc. The UI treats these as **different URLs** on purpose.
@@ -21,6 +21,7 @@ This README reflects the **current implementation** in this repository (not a ro
 - Persist and display **attack chains**, **alerts**, and **mitigations** per site (with **upsert** semantics when payloads include an `id`).
 - Surface **asset register** content (upload/normalize flows in the UI; canonical JSON stored server-side).
 - Merge **live engine snapshots** with **persisted API snapshots** when the engine is down or unreachable.
+- Persist **AI assistant** threads (`assistant_conversations` / `assistant_messages`) scoped to the site, with optional deletion from the UI.
 - **JWT authentication** scoped to the logged-in site.
 
 ---
@@ -36,7 +37,7 @@ This README reflects the **current implementation** in this repository (not a ro
 | **Alerts** | Tables, detail drawers, severity/triage visuals; ingest via API and/or engine snapshot. |
 | **Mitigations** | Cards and detail UI; **PATCH** applied state to the API (`persistedRecordId`). |
 | **TTPs & monitoring** | Tactic-oriented views and monitoring/log-oriented UI wired to engine snapshot and demo fixtures. |
-| **AI assistant** | Chat UI calling `/api/assistant/chat`; responses summarize site + counts from DB (extensible to real LLM). |
+| **AI assistant** | Multi-thread chat persisted in the DB; sidebar history, **date/time** on each message, **rename** (pencil, inline editor), **new conversation**, **delete** with confirm/cancel. `POST /api/assistant/chat` saves **user** and **assistant** messages; replies include site context plus **prior turns** in that thread (register, chains, alerts, mitigations). |
 | **Settings** | Engine base URL, polling, timeouts, demo mode, layer thresholds (client-side config, `localStorage`). |
 | **Documentation** | In-app documentation page. |
 | **Demo mode** | Loads local `detectionSample` fixtures instead of the live engine. |
@@ -85,6 +86,7 @@ flowchart LR
 2. **EngineContext** polls **engine** `/health` and `/snapshot` (unless demo mode). On success, data is normalized to a common snapshot shape.
 3. In parallel, the client may fetch **`/api/site/persisted-snapshot`** and **merge** with the live snapshot so rows survive engine restarts.
 4. Mitigation “applied” toggles can call **`PATCH /api/site/mitigations/{record_id}`** so persistence stays authoritative.
+5. On **AI Assistant**, each send hits **`POST /api/assistant/chat`**; the API stores user + assistant rows and returns them so the UI updates immediately; threads can be listed, reopened, or deleted (with confirmation).
 
 ---
 
@@ -113,8 +115,16 @@ flowchart LR
 | `app/client/src/components/ProtectedRoute.jsx` | Guards authenticated routes. |
 | `app/client/src/components/detection/*` | Cards, tables, drawers, timeline, log stream. |
 | `app/client/src/components/ai/*` | Assistant chat UI. |
-| `app/client/src/pages/*` | Top-level screens (Dashboard, Asset Register, Alerts, …). |
+| `app/client/src/components/ui/ConfirmDialog.jsx` | Confirm/cancel modal (e.g. delete assistant conversation). |
+| `app/client/src/pages/aiAssistant.jsx` | Assistant page: thread list, persisted messages, **rename** (pencil + inline save/cancel), send + delete flows. |
+| `app/client/src/pages/*` | Other top-level screens (Dashboard, Asset Register, Alerts, …). |
 | `app/client/src/setupProxy.js` | Proxies **`/api`** to the FastAPI process. |
+
+### Assistant conversations (persistence and UI)
+
+- **Backend**: `assistant_conversations` (per `site_id`) stores an optional **`title`** (default from the first user message; can be changed via **`PATCH /api/assistant/conversations/{id}`**). `assistant_messages` hold `role` (`user` | `assistant`), `content`, `created_at`. Deleting a conversation **cascades** all messages. `POST /api/assistant/chat` accepts optional `conversation_id`; omit or send `null` to **start a new thread**.
+- **Context**: Each reply is built from the **asset register summary**, **counts** of stored chains / alerts / mitigations, and a rolling excerpt of **prior messages** in the same thread (last 30 messages max in the template), then the new user message is stored and the assistant reply is stored.
+- **Frontend**: `app/client/src/pages/aiAssistant.jsx` loads **conversation history**, merges new messages immediately after each send, supports **rename** with validation errors surfaced next to the list, uses `ConfirmDialog` before **permanent** deletion, and shows the **current title** in the chat panel header.
 
 ### Data flow and state management
 
@@ -168,7 +178,11 @@ Routers are mounted under **`/api`** except **system** routes (root `/` and `/he
 | `POST` | `/api/site/attack-chains` | Bearer | Upsert chain (by payload `id` → `external_id`) |
 | `POST` | `/api/site/alerts` | Bearer | Upsert alert |
 | `POST` | `/api/site/mitigations` | Bearer | Upsert mitigation |
-| `POST` | `/api/assistant/chat` | Bearer | Template reply + `context_summary` |
+| `GET` | `/api/assistant/conversations` | Bearer | List assistant threads (+ message counts) for the site |
+| `GET` | `/api/assistant/conversations/{id}/messages` | Bearer | Full message list for a thread |
+| `PATCH` | `/api/assistant/conversations/{id}` | Bearer | Body: `{ "title": "..." }` (1–512 chars, trimmed). Returns updated `AssistantConversationListItem`; **404** if not found |
+| `DELETE` | `/api/assistant/conversations/{id}` | Bearer | Delete thread and all messages (**204**) |
+| `POST` | `/api/assistant/chat` | Bearer | Body: `message`, optional `conversation_id`. Persists user + assistant messages; returns `reply`, `context_summary`, `conversation_id`, `user_message`, `assistant_message` |
 
 **Layers**
 
@@ -193,13 +207,15 @@ Routers are mounted under **`/api`** except **system** routes (root `/` and `/he
 
 ### Complete schema (entity–relationship)
 
-The diagram below matches **`aegisrec.models.site`** (SQLAlchemy 2.0): table names, columns, PK/FK, and **`ON DELETE CASCADE`** from child tables to `sites.id`. Types are logical (SQLite + SQLAlchemy); `datetime` columns are **timezone-aware** in the ORM.
+The diagram below matches **`aegisrec.models.site`** and **`aegisrec.models.assistant`**: table names, columns, PK/FK, and **`ON DELETE CASCADE`** on the edges shown. Types are logical (SQLite + SQLAlchemy); `datetime` columns are **timezone-aware** in the ORM.
 
 ```mermaid
 erDiagram
   sites ||--o{ attack_chain_records : "site_id CASCADE"
   sites ||--o{ alert_records : "site_id CASCADE"
   sites ||--o{ mitigation_records : "site_id CASCADE"
+  sites ||--o{ assistant_conversations : "site_id CASCADE"
+  assistant_conversations ||--o{ assistant_messages : "conversation_id CASCADE"
 
   sites {
     int id PK
@@ -247,6 +263,22 @@ erDiagram
     datetime created_at "TZ UTC"
     datetime updated_at "TZ UTC"
   }
+
+  assistant_conversations {
+    int id PK
+    int site_id FK
+    string title "nullable, max 512"
+    datetime created_at "TZ UTC"
+    datetime updated_at "TZ UTC"
+  }
+
+  assistant_messages {
+    int id PK
+    int conversation_id FK
+    string role "user assistant"
+    text content "NOT NULL"
+    datetime created_at "TZ UTC"
+  }
 ```
 
 ### Cardinality and ownership (color overview)
@@ -275,14 +307,28 @@ flowchart TB
     I["payload JSON · applied · applied_at"]
   end
 
+  subgraph T_CONV["Table: assistant_conversations"]
+    J["FK site_id · title"]
+    K["thread metadata · timestamps"]
+  end
+
+  subgraph T_MSG["Table: assistant_messages"]
+    L["FK conversation_id"]
+    M["role user assistant · content · created_at"]
+  end
+
   T_SITE -->|one site| T_CHAIN
   T_SITE -->|one site| T_ALERT
   T_SITE -->|one site| T_MIT
+  T_SITE -->|one site| T_CONV
+  T_CONV -->|one thread| T_MSG
 
   style T_SITE fill:#bbdefb,stroke:#0d47a1,stroke-width:3px,color:#01579b
   style T_CHAIN fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px,color:#1b5e20
   style T_ALERT fill:#ffe0b2,stroke:#e65100,stroke-width:2px,color:#bf360c
   style T_MIT fill:#e1bee7,stroke:#4a148c,stroke-width:2px,color:#4a148c
+  style T_CONV fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#880e4f
+  style T_MSG fill:#f8bbd0,stroke:#ad1457,stroke-width:2px,color:#880e4f
 ```
 
 ### Payload storage and upsert semantics
@@ -322,13 +368,21 @@ flowchart LR
 
 **`attack_chain_records`**, **`alert_records`**, **`mitigation_records`** — child rows with **`site_id`** → **`sites.id`** (`ON DELETE CASCADE`), optional **`external_id`** (indexed), JSON **`payload`**, and UTC **`created_at` / `updated_at`**. Chains add **`status_tag`**; mitigations add **`applied`** and **`applied_at`**.
 
+**`assistant_conversations`** / **`assistant_messages`** — persisted **AI assistant** threads: optional **`title`** (first message snippet), messages with **`role`** `user` | `assistant`, **`content`**, UTC **`created_at`**. Deleting a conversation removes all its messages.
+
 ### Relationships (text)
 
 ```text
 Site (1) ──< (N) AttackChainRecord
 Site (1) ──< (N) AlertRecord
 Site (1) ──< (N) MitigationRecord
+Site (1) ──< (N) AssistantConversation
+AssistantConversation (1) ──< (N) AssistantMessage
 ```
+
+### Schema upgrades (existing SQLite files)
+
+On deploy, **restart the API** after upgrading so `Base.metadata.create_all` runs at startup and creates **`assistant_conversations`** / **`assistant_messages`** if they are missing. For production, prefer migrations (e.g. Alembic) over relying on `create_all` alone.
 
 ### Client-facing snapshot shape
 
@@ -439,7 +493,7 @@ Change this user or disable seeding before any production use.
 3. **Asset Register** → review/upload/normalize assets; data is persisted in **`sites.asset_register_json`**.
 4. **Alerts / Mitigations / TTPs / Monitoring** → explore merged engine + persisted data; open drawers for details.
 5. **Mark mitigation applied** → UI issues **`PATCH /api/site/mitigations/{persistedRecordId}`** so the `applied` bit survives refreshes.
-6. **AI Assistant** → ask questions; responses summarize DB-backed context (counts, architecture blurb). Replace `assistant_service` with an LLM-backed implementation when ready.
+6. **AI Assistant** → start or reopen a **saved thread**; each exchange is stored with timestamps. **Rename** updates the stored title (sidebar + panel header). **Delete** asks for confirmation, then removes the thread from the database. Replies use register + detection counts + **prior messages** in that thread (template; swap in an LLM later).
 
 ### Health checks
 
@@ -452,7 +506,7 @@ Change this user or disable seeding before any production use.
 
 Ideas that fit the current architecture without rewriting the stack:
 
-- **Assistant**: Swap template replies in `assistant_service` for an LLM with retrieval over site JSON + ORM rows; keep `AssistantChatResponse.context_summary` for UI tooling.
+- **Assistant**: The template in `assistant_service` already persists **threads** and uses **message history**; next step is swapping the reply body for an **LLM** with retrieval over site JSON + ORM rows; keep `AssistantChatResponse.context_summary` for UI tooling.
 - **Multi-site / RBAC**: Today one username maps to one `Site` row; introduce organizations, roles, or admin APIs as needed.
 - **Stricter API contracts**: Replace `dict` bodies on ingest routes with versioned Pydantic models matching the engine schema.
 - **Migrations**: Add Alembic for SQLite → Postgres/MySQL in larger deployments.

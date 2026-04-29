@@ -110,12 +110,43 @@ export const siteApi = {
     });
   },
 
-  assistantChat(token, message) {
+  assistantChat(token, message, conversationId = null) {
     return siteRequest(`/api/assistant/chat`, {
       token,
       method: "POST",
-      body: { message },
+      body: {
+        message,
+        ...(conversationId != null ? { conversation_id: conversationId } : {}),
+      },
       timeoutMs: 30000,
+    });
+  },
+
+  listAssistantConversations(token) {
+    return siteRequest(`/api/assistant/conversations`, { token, timeoutMs: 15000 });
+  },
+
+  getAssistantConversationMessages(token, conversationId) {
+    return siteRequest(`/api/assistant/conversations/${conversationId}/messages`, {
+      token,
+      timeoutMs: 15000,
+    });
+  },
+
+  deleteAssistantConversation(token, conversationId) {
+    return siteRequest(`/api/assistant/conversations/${conversationId}`, {
+      token,
+      method: "DELETE",
+      timeoutMs: 15000,
+    });
+  },
+
+  patchAssistantConversationTitle(token, conversationId, title) {
+    return siteRequest(`/api/assistant/conversations/${conversationId}`, {
+      token,
+      method: "PATCH",
+      body: { title },
+      timeoutMs: 15000,
     });
   },
 

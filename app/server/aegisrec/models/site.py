@@ -46,6 +46,11 @@ class Site(Base):
     mitigations: Mapped[list["MitigationRecord"]] = relationship(
         "MitigationRecord", back_populates="site", cascade="all, delete-orphan"
     )
+    assistant_conversations: Mapped[list["AssistantConversation"]] = relationship(
+        "AssistantConversation",
+        back_populates="site",
+        cascade="all, delete-orphan",
+    )
 
 
 class AttackChainRecord(Base):
