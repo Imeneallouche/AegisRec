@@ -1,13 +1,20 @@
+import React from "react";
 import Drawer, { DrawerField, DrawerSection } from "../ui/Drawer";
 import { SeverityBadge, StatusBadge } from "../ui/Badge";
 import { TechniqueChip, AssetChip } from "./TacticChip";
 import { formatDateTime } from "../ui/formatters";
 import { useEngine } from "../../context/EngineContext";
+import { useAuth } from "../../context/AuthContext";
+import { siteApi } from "../../api/siteApi";
+import { EngineError } from "../../api/client";
 import { MiniAlertRow } from "./AlertsTable";
 import { CheckCircle2, AlertTriangle, Undo2, BookOpen } from "lucide-react";
 
 export default function MitigationDetailDrawer({ mitigation: m, open, onClose, onOpenAlert, onOpenChain }) {
-  const { data } = useEngine();
+  const { data, refresh } = useEngine();
+  const { token } = useAuth();
+  const [mitBusy, setMitBusy] = React.useState(false);
+  const [mitErr, setMitErr] = React.useState(null);
   if (!m) return null;
   const chain = m.chainId ? data.chains.find((c) => c.id === m.chainId) || null : null;
   const relatedAlerts = data.alerts.filter((a) => (m.alertIds || []).includes(a.id));
@@ -125,6 +132,56 @@ export default function MitigationDetailDrawer({ mitigation: m, open, onClose, o
       </DrawerSection>
 
       <DrawerSection title="Actions">
+        {m.persistedRecordId && token ? (
+          <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-slate-500">
+              Implementation status (saved to site database)
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={mitBusy || m.status === "implemented"}
+                onClick={async () => {
+                  setMitErr(null);
+                  setMitBusy(true);
+                  try {
+                    await siteApi.patchMitigationApplied(token, m.persistedRecordId, true);
+                    await refresh({ silent: true });
+                    onClose?.();
+                  } catch (err) {
+                    setMitErr(err instanceof EngineError ? err.message : String(err));
+                  } finally {
+                    setMitBusy(false);
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" /> Mark applied
+              </button>
+              <button
+                type="button"
+                disabled={mitBusy || m.status !== "implemented"}
+                onClick={async () => {
+                  setMitErr(null);
+                  setMitBusy(true);
+                  try {
+                    await siteApi.patchMitigationApplied(token, m.persistedRecordId, false);
+                    await refresh({ silent: true });
+                    onClose?.();
+                  } catch (err) {
+                    setMitErr(err instanceof EngineError ? err.message : String(err));
+                  } finally {
+                    setMitBusy(false);
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Undo2 className="h-3.5 w-3.5" /> Mark not applied
+              </button>
+            </div>
+            {mitErr ? <p className="mt-2 text-xs text-rose-600">{mitErr}</p> : null}
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"

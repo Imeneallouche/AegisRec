@@ -2,60 +2,77 @@ import React from "react";
 import Sidebar from "../components/sidebar";
 import AIAssistantChat from "../components/ai/AIAssistantChat";
 import { IconNavAssistant } from "../data/icons";
-
-const WELCOME_ID = "welcome";
-const WELCOME_TEXT =
-  "Hi — I’m your ICS security assistant. Ask questions about your asset register, TTPs, mitigations, or day-to-day triage. (Responses are placeholder until a model API is connected.)";
+import { useAuth } from "../context/AuthContext";
+import { siteApi } from "../api/siteApi";
+import { EngineError } from "../api/client";
 
 function newId() {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+const WELCOME_ID = "welcome";
+
 export default function AIAssistant() {
+  const { token, site, authReady } = useAuth();
   const [input, setInput] = React.useState("");
   const [isSending, setIsSending] = React.useState(false);
-  const replyTimerRef = React.useRef(null);
-  const [messages, setMessages] = React.useState(() => [
-    {
-      id: WELCOME_ID,
-      role: "assistant",
-      content: WELCOME_TEXT,
-      at: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = React.useState(() => {
+    const welcome =
+      "Hi — I'm your ICS security assistant. Ask questions about your asset register, attack chains, mitigations, and alerts. " +
+      "Answers use your site's data stored in AegisRec (see the AI chat API for context).";
+    return [
+      {
+        id: WELCOME_ID,
+        role: "assistant",
+        content: welcome,
+        at: Date.now(),
+      },
+    ];
+  });
 
-  React.useEffect(
-    () => () => {
-      if (replyTimerRef.current) window.clearTimeout(replyTimerRef.current);
-    },
-    []
-  );
-
-  const send = React.useCallback(() => {
+  const send = React.useCallback(async () => {
     const text = String(input).trim();
-    if (!text || isSending) return;
+    if (!text || isSending || !token) return;
 
     const userMsg = { id: newId(), role: "user", content: text, at: Date.now() };
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setIsSending(true);
 
-    if (replyTimerRef.current) window.clearTimeout(replyTimerRef.current);
-    const delay = 500 + Math.min(400, text.length * 4);
-    replyTimerRef.current = window.setTimeout(() => {
-      replyTimerRef.current = null;
+    try {
+      const res = await siteApi.assistantChat(token, text);
+      const replyText = typeof res?.reply === "string" ? res.reply : JSON.stringify(res);
       setMessages((m) => [
         ...m,
         {
           id: newId(),
           role: "assistant",
-          content: `I received: “${text.slice(0, 200)}${text.length > 200 ? "…" : ""}”\n\nThis is a demo response. Wire this page to your LLM or RAG service to return real analysis.`,
+          content: replyText,
           at: Date.now(),
         },
       ]);
+    } catch (err) {
+      const msg =
+        err instanceof EngineError
+          ? `Request failed: ${err.message}`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setMessages((m) => [
+        ...m,
+        {
+          id: newId(),
+          role: "assistant",
+          content: msg,
+          at: Date.now(),
+        },
+      ]);
+    } finally {
       setIsSending(false);
-    }, delay);
-  }, [input, isSending]);
+    }
+  }, [input, isSending, token]);
+
+  const siteLabel = site?.site_name || site?.username || "—";
 
   return (
     <div className="h-screen bg-slate-50 text-slate-800">
@@ -75,21 +92,18 @@ export default function AIAssistant() {
                   AI assistant
                 </h1>
                 <p className="mt-0.5 text-sm text-slate-500">
-                  Ask questions in natural language. Optimized for ICS / OT
-                  security workflows.
+                  Context-aware answers using your ICS/OT site record in the database
+                  {authReady ? "" : " (loading…)"}.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3 sm:shrink-0">
-              <span className="hidden text-sm text-slate-500 md:inline">
-                Log out
+              <span className="hidden max-w-[12rem] truncate text-sm text-slate-600 md:inline" title={siteLabel}>
+                {siteLabel}
               </span>
-              <button
-                type="button"
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
-              >
-                GRFICSv3
-              </button>
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800 ring-1 ring-indigo-100">
+                DB-backed context
+              </span>
             </div>
           </header>
 
@@ -106,6 +120,12 @@ export default function AIAssistant() {
                 onInputChange={setInput}
                 onSend={send}
                 isSending={isSending}
+                disabled={!token}
+                footNote={
+                  token
+                    ? "Responses combine live site context from AegisRec (asset register, detection history). Connect an LLM for richer narrative answers."
+                    : "Sign in to query your site's database context."
+                }
               />
             </div>
           </div>

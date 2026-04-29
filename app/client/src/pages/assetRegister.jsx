@@ -1,12 +1,33 @@
 import React from "react";
 import Sidebar from "../components/sidebar";
 import RegisterSheetTabs from "../components/RegisterSheetTabs";
-import assetRegister from "../data/assetRegister";
-
-const initialRegister = { ...assetRegister };
+import { useAuth } from "../context/AuthContext";
 
 export default function AssetRegister() {
-  const [register] = React.useState(initialRegister);
+  const { assetRegister, authReady, refreshAssetRegister } = useAuth();
+  const register = assetRegister;
+
+  React.useEffect(() => {
+    if (authReady) {
+      refreshAssetRegister();
+    }
+  }, [authReady, refreshAssetRegister]);
+
+  if (!authReady || !register) {
+    return (
+      <div className="flex h-screen bg-slate-50 text-slate-800">
+        <Sidebar />
+        <main className="flex flex-1 items-center justify-center p-8">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" aria-hidden />
+            <p className="text-sm text-slate-600">
+              {!authReady ? "Loading session…" : "Loading asset register from AegisRec…"}
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-slate-50 text-slate-800 flex flex-col">
@@ -22,13 +43,9 @@ export default function AssetRegister() {
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <div className="text-sm text-slate-500 hidden md:block">Log out</div>
-              <button
-                type="button"
-                className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
-              >
-                GRFICSv3
-              </button>
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-800 ring-1 ring-indigo-100">
+                Database-backed
+              </span>
             </div>
           </header>
 
@@ -47,7 +64,7 @@ export default function AssetRegister() {
               </div>
               <div className="text-slate-400 tabular-nums">
                 Standard: {register?.metadata?.standard_version || "—"} · Last
-                import: {new Date().toLocaleString()}
+                import: {register?.metadata?.normalization_date || new Date().toLocaleString()}
               </div>
             </div>
           </footer>

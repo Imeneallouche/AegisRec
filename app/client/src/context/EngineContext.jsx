@@ -2,6 +2,8 @@ import React from "react";
 
 import { detectionApi } from "../api/detectionApi";
 import { EngineError } from "../api/client";
+import { siteApi } from "../api/siteApi";
+import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
 
 /**
@@ -13,6 +15,7 @@ import { useSettings } from "./SettingsContext";
  *   offline    → last refresh failed at the network / health layer
  *   degraded   → health OK but /snapshot failed (engine up, data plumbing missing)
  *   demo       → demoMode enabled in settings — served from local fixtures
+ *   persisted  → engine unavailable but site-scoped DB snapshot has detection rows
  */
 
 const EMPTY_SNAPSHOT = {
@@ -52,8 +55,8 @@ async function loadDemoSnapshot() {
   };
 }
 
-function coerceSnapshot(raw) {
-  if (!raw || typeof raw !== "object") return EMPTY_SNAPSHOT;
+export function coerceSnapshot(raw) {
+  if (!raw || typeof raw !== "object") return { ...EMPTY_SNAPSHOT };
   return {
     chains: Array.isArray(raw.chains) ? raw.chains : [],
     alerts: Array.isArray(raw.alerts) ? raw.alerts : [],
@@ -64,8 +67,65 @@ function coerceSnapshot(raw) {
   };
 }
 
+function mergeSnapshots(persisted, live) {
+  const a = coerceSnapshot(persisted);
+  const b = coerceSnapshot(live);
+
+  const mergeList = (left, right) => {
+    const byId = new Map();
+    for (const item of left || []) {
+      if (item && item.id != null) byId.set(item.id, item);
+    }
+    for (const item of right || []) {
+      if (item && item.id != null) byId.set(item.id, item);
+    }
+    return [...byId.values()];
+  };
+
+  const logMerge = [...(a.logs || []), ...(b.logs || [])];
+  const seen = new Set();
+  const logs = [];
+  for (const L of logMerge) {
+    const key = L && L.id != null ? String(L.id) : JSON.stringify(L);
+    if (!seen.has(key)) {
+      seen.add(key);
+      logs.push(L);
+    }
+  }
+
+  return {
+    chains: mergeList(a.chains, b.chains),
+    alerts: mergeList(a.alerts, b.alerts),
+    mitigations: mergeList(a.mitigations, b.mitigations),
+    logs,
+    stats: b.stats ?? a.stats ?? null,
+    fetchedAt: b.fetchedAt || a.fetchedAt || new Date().toISOString(),
+    _tactics: b._tactics ?? a._tactics,
+    _dataComponents: b._dataComponents ?? a._dataComponents,
+    _assets: b._assets ?? a._assets,
+  };
+}
+
+function snapshotHasDetectionRows(snap) {
+  const s = coerceSnapshot(snap);
+  return (
+    (s.chains?.length || 0) + (s.alerts?.length || 0) + (s.mitigations?.length || 0) > 0
+  );
+}
+
+async function fetchPersistedSnapshot(token) {
+  if (!token) return { ...EMPTY_SNAPSHOT };
+  try {
+    const raw = await siteApi.getPersistedSnapshot(token);
+    return coerceSnapshot(raw);
+  } catch {
+    return { ...EMPTY_SNAPSHOT };
+  }
+}
+
 export function EngineProvider({ children }) {
   const { settings } = useSettings();
+  const { token: authToken } = useAuth();
 
   const [status, setStatus] = React.useState("idle");
   const [health, setHealth] = React.useState(null);
@@ -82,8 +142,10 @@ export function EngineProvider({ children }) {
       if (engine.demoMode) {
         if (!silent) setStatus("loading");
         try {
-          const snap = await loadDemoSnapshot();
-          setData(snap);
+          const persisted = await fetchPersistedSnapshot(authToken);
+          const demo = await loadDemoSnapshot();
+          const merged = mergeSnapshots(persisted, demo);
+          setData(merged);
           setHealth({
             ok: true,
             demo: true,
@@ -101,51 +163,67 @@ export function EngineProvider({ children }) {
         return;
       }
 
-      if (inFlightRef.current) return; // coalesce overlapping ticks
+      if (inFlightRef.current) return;
       if (!silent) setStatus((s) => (s === "idle" ? "loading" : s));
 
-      const token = Symbol("refresh");
-      inFlightRef.current = token;
+      const tick = Symbol("refresh");
+      inFlightRef.current = tick;
 
       try {
-        const h = await detectionApi.health(engine.baseUrl, engine.requestTimeoutMs);
-        if (inFlightRef.current !== token) return;
-        setHealth(h);
+        const persisted = await fetchPersistedSnapshot(authToken);
+
+        let live = { ...EMPTY_SNAPSHOT };
+        let engineStatus = "offline";
+        let snapErrMsg = null;
 
         try {
-          const snap = await detectionApi.snapshot(engine.baseUrl, engine.requestTimeoutMs);
-          if (inFlightRef.current !== token) return;
-          setData(coerceSnapshot(snap));
-          setError(null);
-          setLastUpdated(new Date());
-          setStatus("connected");
-        } catch (snapErr) {
-          if (inFlightRef.current !== token) return;
-          // Engine is alive but cannot produce a snapshot.
-          setData(EMPTY_SNAPSHOT);
-          setError(snapErr instanceof EngineError ? snapErr.message : String(snapErr));
-          setLastUpdated(new Date());
-          setStatus("degraded");
+          const h = await detectionApi.health(settings.engine.baseUrl, engine.requestTimeoutMs);
+          if (inFlightRef.current !== tick) return;
+          setHealth(h);
+          try {
+            const snap = await detectionApi.snapshot(settings.engine.baseUrl, engine.requestTimeoutMs);
+            if (inFlightRef.current !== tick) return;
+            live = coerceSnapshot(snap);
+            engineStatus = "connected";
+          } catch (snapErr) {
+            if (inFlightRef.current !== tick) return;
+            snapErrMsg = snapErr instanceof EngineError ? snapErr.message : String(snapErr);
+            engineStatus = "degraded";
+          }
+        } catch (err) {
+          if (inFlightRef.current !== tick) return;
+          setHealth(null);
+          snapErrMsg = err instanceof EngineError ? err.message : String(err);
+          engineStatus = "offline";
         }
-      } catch (err) {
-        if (inFlightRef.current !== token) return;
-        setHealth(null);
-        setData(EMPTY_SNAPSHOT);
-        setError(err instanceof EngineError ? err.message : String(err));
-        setStatus("offline");
+
+        if (inFlightRef.current !== tick) return;
+
+        const merged = mergeSnapshots(persisted, live);
+        setData(merged);
+        setLastUpdated(new Date());
+
+        if (engineStatus === "connected") {
+          setError(null);
+          setStatus("connected");
+        } else if (engineStatus === "degraded") {
+          setError(snapErrMsg);
+          setStatus(snapshotHasDetectionRows(merged) ? "persisted" : "degraded");
+        } else {
+          setError(snapErrMsg);
+          setStatus(snapshotHasDetectionRows(merged) ? "persisted" : "offline");
+        }
       } finally {
-        if (inFlightRef.current === token) inFlightRef.current = null;
+        if (inFlightRef.current === tick) inFlightRef.current = null;
       }
     },
-    [settings]
+    [settings, authToken]
   );
 
-  // Kick off on mount and whenever the config that affects fetching changes.
   React.useEffect(() => {
     refresh();
   }, [refresh]);
 
-  // Polling loop.
   React.useEffect(() => {
     const { engine } = settings;
     const ms = Math.max(3, Number(engine.pollIntervalSec) || 15) * 1000;
@@ -177,7 +255,7 @@ export function EngineProvider({ children }) {
       refresh,
       submitFeedback,
       isDemo: status === "demo",
-      isConnected: status === "connected" || status === "demo",
+      isConnected: status === "connected" || status === "demo" || status === "persisted",
       isOffline: status === "offline",
       isDegraded: status === "degraded",
       isLoading: status === "loading",

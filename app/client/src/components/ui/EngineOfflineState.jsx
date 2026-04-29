@@ -4,6 +4,7 @@ import { PlugZap, RefreshCw, Settings as SettingsIcon, Activity } from "lucide-r
 
 import { useEngine } from "../../context/EngineContext";
 import { useSettings } from "../../context/SettingsContext";
+import { resolveDetectionEngineBaseUrl } from "../../utils/engineBaseUrl";
 
 /**
  * Fallback screen shown whenever the detection engine is unreachable, in a
@@ -45,6 +46,8 @@ export default function EngineOfflineState({ title, description, compact = false
             ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200/70"
             : status === "degraded"
             ? "bg-amber-50 text-amber-600 ring-1 ring-amber-200/70"
+            : status === "persisted"
+            ? "bg-cyan-50 text-cyan-600 ring-1 ring-cyan-200/70"
             : "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200/70",
           compact ? "h-10 w-10" : "h-14 w-14",
         ].join(" ")}
@@ -67,7 +70,7 @@ export default function EngineOfflineState({ title, description, compact = false
         <dl className="mt-6 w-full max-w-md overflow-hidden rounded-xl border border-slate-100 bg-slate-50/70 text-left text-xs text-slate-600 shadow-sm">
           <div className="grid grid-cols-[auto,1fr] gap-x-4 px-4 py-2.5">
             <dt className="font-medium text-slate-500">Engine URL</dt>
-            <dd className="truncate font-mono text-slate-800">{settings.engine.baseUrl}</dd>
+            <dd className="truncate font-mono text-slate-800">{resolveDetectionEngineBaseUrl(settings.engine.baseUrl)}</dd>
           </div>
           <div className="grid grid-cols-[auto,1fr] gap-x-4 border-t border-slate-100 px-4 py-2.5">
             <dt className="font-medium text-slate-500">Poll interval</dt>
@@ -142,6 +145,13 @@ function resolveCopy(status, overrides) {
         description:
           overrides?.description ??
           "Waiting for the first snapshot from the learning service. This normally takes a few seconds.",
+      };
+    case "persisted":
+      return {
+        title: overrides?.title ?? "Showing data from your site database",
+        description:
+          overrides?.description ??
+          "The live detection engine is offline or unreachable, but AegisRec is displaying attack chains, alerts, and mitigations stored for your ICS/OT site. Connect the engine for live updates.",
       };
     default:
       return {

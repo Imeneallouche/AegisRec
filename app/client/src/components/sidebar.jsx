@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   IconNavAssistant,
   IconNavBell,
@@ -11,6 +11,8 @@ import {
   IconNavTable,
   IconNavTtp,
 } from "../data/icons";
+import { useAuth } from "../context/AuthContext";
+import { LogOut } from "lucide-react";
 
 /** Grouped primary navigation; active item follows the current route (NavLink). */
 const NAV_SECTIONS = [
@@ -87,6 +89,16 @@ function navIconClassName(isActive) {
  * to the viewport so the inner `overflow-y-auto` nav handles its own scroll.
  */
 export default function Sidebar() {
+  const { site, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const onLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  const siteLabel = site?.site_name || site?.username || "Site";
+
   return (
     <aside
       className="sticky top-0 flex h-screen w-[min(18rem,100%)] flex-shrink-0 flex-col self-start border-r border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/40 shadow-[1px_0_0_0_rgba(15,23,42,0.04)]"
@@ -153,19 +165,21 @@ export default function Sidebar() {
 
         {/* Help */}
         <div className="mt-5 shrink-0 border-t border-slate-200/80 pt-5">
-          <div className="rounded-xl border border-slate-200/70 bg-slate-50/90 p-4 shadow-sm ring-1 ring-slate-100/50">
-            <p className="text-sm font-semibold text-slate-800">Need help?</p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-              Read the operator guide or contact support.
+          <div className="mb-4 rounded-xl border border-slate-200/70 bg-white/90 px-3 py-3 shadow-sm ring-1 ring-slate-100/60">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">Signed in</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-800" title={siteLabel}>
+              {siteLabel}
             </p>
-            <NavLink
-              to="/Documentation"
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
             >
-              <IconNavBook className="h-4 w-4" />
-              Documentation
-            </NavLink>
+              <LogOut className="h-3.5 w-3.5" aria-hidden />
+              Log out
+            </button>
           </div>
+
         </div>
       </div>
     </aside>

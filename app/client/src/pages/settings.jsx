@@ -141,7 +141,7 @@ export default function Settings() {
               id="engine-url"
               value={engine.baseUrl}
               onChange={(v) => mut("engine", { baseUrl: v })}
-              placeholder="http://localhost:8000"
+              placeholder="http://127.0.0.1:8090"
             />
           </Field>
           <Field

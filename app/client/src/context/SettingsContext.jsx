@@ -1,15 +1,18 @@
 import React from "react";
 
+import { DEFAULT_DETECTION_ENGINE_URL, resolveDetectionEngineBaseUrl } from "../utils/engineBaseUrl";
+
 const STORAGE_KEY = "aegisrec:settings:v1";
 
 /**
- * Default configuration for the AegisRec client.  These values are safe for
- * local development (engine assumed to run at http://localhost:8000) and are
- * overridden per-user via localStorage.
+ * Default configuration for the AegisRec client. The ICS detection / learning
+ * service URL must not use port 8000 — that port is reserved for the AegisRec
+ * API when using ./start-dev.sh. MITRE learning defaults to port 8090; see
+ * MITRE config/learning.yml. Override per-user via localStorage (Settings).
  */
 export const DEFAULT_SETTINGS = {
   engine: {
-    baseUrl: "http://localhost:8000",
+    baseUrl: DEFAULT_DETECTION_ENGINE_URL,
     pollIntervalSec: 15,
     requestTimeoutMs: 8000,
     demoMode: false,
@@ -63,7 +66,20 @@ function readStored() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    if (data?.engine?.baseUrl) {
+      const prevNorm = data.engine.baseUrl.trim().replace(/\/+$/, "");
+      const next = resolveDetectionEngineBaseUrl(data.engine.baseUrl, DEFAULT_DETECTION_ENGINE_URL);
+      if (next !== prevNorm) {
+        data.engine.baseUrl = next;
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    return data;
   } catch {
     return null;
   }

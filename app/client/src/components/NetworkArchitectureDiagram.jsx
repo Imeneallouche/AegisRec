@@ -28,7 +28,6 @@ import {
     ArrowsRightLeftIcon,
     ExclamationTriangleIcon,
     CheckCircleIcon,
-    ClockIcon,
 } from '@heroicons/react/24/outline';
 
 // Asset type to icon mapping
@@ -260,8 +259,6 @@ const NetworkArchitectureDiagram = ({ assetRegister }) => {
         });
 
         // Calculate positions
-        const nodeWidth = 200;
-        const nodeHeight = 150;
         const layerSpacing = 250;
         const nodeSpacing = 200;
 

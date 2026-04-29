@@ -23,6 +23,7 @@ export default function AIAssistantChat({
   isSending = false,
   disabled = false,
   placeholder = "Ask about your ICS environment, TTPs, or mitigations…",
+  footNote,
 }) {
   const bottomRef = React.useRef(null);
 
@@ -87,8 +88,8 @@ export default function AIAssistantChat({
           </button>
         </div>
         <p className="mt-2 text-xs text-slate-400">
-          AI responses are simulated in this build. Connect your backend to enable
-          live assistance.
+          {footNote ||
+            "AI responses are simulated in this build. Connect your backend to enable live assistance."}
         </p>
       </div>
     </div>
