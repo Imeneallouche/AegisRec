@@ -109,7 +109,7 @@ flowchart LR
 | `app/client/src/context/AuthContext.jsx` | Token, site profile, asset register, login/logout, bootstrap `/api/auth/me`. |
 | `app/client/src/context/EngineContext.jsx` | Engine connectivity state machine, snapshot merge, persisted fallback, demo loader. |
 | `app/client/src/api/siteApi.js` | All **AegisRec API** calls (`/api/...`) with `Authorization: Bearer`. |
-| `app/client/src/api/detectionApi.js` | **Engine** endpoints: `/health`, `/snapshot`, scoring, feedback, poll tick. |
+| `app/client/src/api/detectionApi.js` | **Engine** endpoints: `/health`, `/snapshot`, `/alerts/score`, `/alerts/batch`, `/alerts/feedback`, `/poll/tick` (see **`docs/MITRE-Detection-Engine.md`** for extended operator endpoints). |
 | `app/client/src/api/client.js` | Shared `request` helper + `EngineError` typing. |
 | `app/client/src/components/sidebar.jsx` | Primary navigation. |
 | `app/client/src/components/ProtectedRoute.jsx` | Guards authenticated routes. |
@@ -423,6 +423,8 @@ This script:
 - **UI**: `http://localhost:3000`
 
 ### Optional: MITRE detection / learning service
+
+Canonical integration reference: **[`docs/MITRE-Detection-Engine.md`](docs/MITRE-Detection-Engine.md)** (endpoints, ports, alert field expectations).
 
 The UI expects a **separate** engine process for live detection data (not bundled in this repo). Example from `start-dev.sh` comments:
 

@@ -16,7 +16,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useEngine } from "../context/EngineContext";
-import EngineOfflineState from "../components/ui/EngineOfflineState";
+import DbSnapshotBanner from "../components/ui/DbSnapshotBanner";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -52,7 +52,7 @@ const PRIORITY_LABEL = {
 };
 
 export default function Mitigations() {
-  const { data, isConnected } = useEngine();
+  const { data } = useEngine();
   const MITIGATIONS = React.useMemo(() => data.mitigations || [], [data.mitigations]);
 
   const [status, setStatus] = React.useState("all");
@@ -92,24 +92,13 @@ export default function Mitigations() {
   const kgGrounded = MITIGATIONS.filter((m) => !!m.kgMitigationId).length;
   const kgCoverage = MITIGATIONS.length ? kgGrounded / MITIGATIONS.length : 0;
 
-  if (!isConnected) {
-    return (
-      <PageShell
-        title="Mitigations"
-        subtitle="KG-grounded, LLM-generated mitigation plans (Layer D) — reviewed and tracked to implementation"
-        icon={IconNavShield}
-      >
-        <EngineOfflineState />
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell
       title="Mitigations"
       subtitle="KG-grounded, LLM-generated mitigation plans (Layer D) — reviewed and tracked to implementation"
       icon={IconNavShield}
     >
+      <DbSnapshotBanner />
       <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatCard
           title="Total plans"
@@ -151,7 +140,13 @@ export default function Mitigations() {
         </div>
       </div>
 
-      {grouped.length === 0 ? (
+      {MITIGATIONS.length === 0 ? (
+        <EmptyState
+          icon={ShieldCheck}
+          title="No mitigations yet"
+          description="There are no mitigation plans stored for this site. Mitigations are only populated when the engine posts Layer D output to AegisRec (not from the alert ES sync). Ensure HTTP ingest is enabled with a matching ingest secret if you expect plans here."
+        />
+      ) : grouped.length === 0 ? (
         <EmptyState
           icon={ShieldCheck}
           title="No mitigations match your filters"

@@ -7,7 +7,7 @@ from aegisrec.schemas.assistant import (
     ChatMessagePublic,
 )
 from aegisrec.schemas.auth import LoginRequest, LoginResponse, TokenResponse
-from aegisrec.schemas.site import MitigationAppliedPatch, SitePublic
+from aegisrec.schemas.site import MitigationAppliedPatch, SitePublic, SyncDetectionIndicesBody
 
 __all__ = [
     "AssistantChatRequest",
@@ -21,4 +21,5 @@ __all__ = [
     "TokenResponse",
     "MitigationAppliedPatch",
     "SitePublic",
+    "SyncDetectionIndicesBody",
 ]

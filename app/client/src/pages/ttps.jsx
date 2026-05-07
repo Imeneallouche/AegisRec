@@ -12,7 +12,7 @@ import MitigationDetailDrawer from "../components/detection/MitigationDetailDraw
 import { IconNavTtp } from "../data/icons";
 import { Target } from "lucide-react";
 import { useEngine } from "../context/EngineContext";
-import EngineOfflineState from "../components/ui/EngineOfflineState";
+import DbSnapshotBanner from "../components/ui/DbSnapshotBanner";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -25,7 +25,7 @@ export default function TTPs() {
   const location = useLocation();
   const deepLinkId = location.state?.chainId;
 
-  const { data, isConnected } = useEngine();
+  const { data } = useEngine();
   const CHAINS = React.useMemo(() => data.chains || [], [data.chains]);
 
   const [statusFilter, setStatusFilter] = React.useState("all");
@@ -60,24 +60,13 @@ export default function TTPs() {
     });
   }, [statusFilter, query, CHAINS]);
 
-  if (!isConnected) {
-    return (
-      <PageShell
-        title="Attack chains"
-        subtitle="Causal-window Transformer recognitions (Layer B) grouped by kill-chain progression"
-        icon={IconNavTtp}
-      >
-        <EngineOfflineState />
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell
       title="Attack chains"
       subtitle="Causal-window Transformer recognitions (Layer B) grouped by kill-chain progression"
       icon={IconNavTtp}
     >
+      <DbSnapshotBanner />
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60 sm:flex-row sm:items-center sm:justify-between">
         <SearchInput
           value={query}
@@ -92,11 +81,17 @@ export default function TTPs() {
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {CHAINS.length === 0 ? (
+        <EmptyState
+          icon={Target}
+          title="No attack chains yet"
+          description="There are no TTP chains stored for this site. Configure HTTP ingest from the engine, or rely on periodic sync from your Elasticsearch correlation indices (ics-correlations-*). A live browser session is not required once rows are in the database."
+        />
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={Target}
           title="No attack chains match your filters"
-          description="Try clearing the search term or switching to ‘All’ to see every chain the engine has recognised."
+          description="Try clearing the search term or switching to ‘All’ to see every stored chain."
         />
       ) : (
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">

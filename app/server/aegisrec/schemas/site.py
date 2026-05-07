@@ -19,3 +19,10 @@ class SitePublic(BaseModel):
 
 class MitigationAppliedPatch(BaseModel):
     applied: bool
+
+
+class SyncDetectionIndicesBody(BaseModel):
+    """Pull recent documents from MITRE alert/correlation indices into this site's SQLite rows."""
+
+    alert_minutes: int = Field(default=2880, ge=5, le=10080)
+    chain_minutes: int = Field(default=2880, ge=5, le=10080)

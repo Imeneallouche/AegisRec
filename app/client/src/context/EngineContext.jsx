@@ -134,6 +134,7 @@ export function EngineProvider({ children }) {
   const [lastUpdated, setLastUpdated] = React.useState(null);
 
   const inFlightRef = React.useRef(null);
+  const lastEsSyncRef = React.useRef(0);
 
   const refresh = React.useCallback(
     async ({ silent = false } = {}) => {
@@ -170,6 +171,27 @@ export function EngineProvider({ children }) {
       inFlightRef.current = tick;
 
       try {
+        if (
+          authToken &&
+          !engine.demoMode &&
+          Date.now() - lastEsSyncRef.current > 40000
+        ) {
+          try {
+            await siteApi.syncDetectionIndices(authToken, {
+              alert_minutes: 4320,
+              chain_minutes: 4320,
+            });
+            lastEsSyncRef.current = Date.now();
+          } catch (syncErr) {
+            if (typeof console !== "undefined" && console.debug) {
+              console.debug(
+                "[AegisRec] sync-detection-indices:",
+                syncErr instanceof Error ? syncErr.message : String(syncErr)
+              );
+            }
+          }
+        }
+
         const persisted = await fetchPersistedSnapshot(authToken);
 
         let live = { ...EMPTY_SNAPSHOT };

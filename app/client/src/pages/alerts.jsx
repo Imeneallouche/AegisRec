@@ -12,7 +12,7 @@ import { IconNavBell } from "../data/icons";
 import { Bell, ShieldAlert, ShieldCheck, Activity } from "lucide-react";
 import { tacticOf } from "../data/detectionSample";
 import { useEngine } from "../context/EngineContext";
-import EngineOfflineState from "../components/ui/EngineOfflineState";
+import DbSnapshotBanner from "../components/ui/DbSnapshotBanner";
 
 const SEVERITY_OPTIONS = [
   { value: "all", label: "All" },
@@ -40,7 +40,7 @@ function countBy(list, key) {
 }
 
 export default function Alerts() {
-  const { data, isConnected } = useEngine();
+  const { data } = useEngine();
   const ALERTS = React.useMemo(() => data.alerts || [], [data.alerts]);
 
   const [severity, setSeverity] = React.useState("all");
@@ -87,99 +87,106 @@ export default function Alerts() {
   const bySeverity = countBy(ALERTS, "severity");
   const safetyRailTriggers = ALERTS.filter((a) => a.layerA?.usedSafetyRail || a.layerC?.usedSafetyRail).length;
 
-  if (!isConnected) {
-    return (
-      <PageShell
-        title="Alerts"
-        subtitle="Every orchestrated decision (Layer A → B → C) with its reasoning and evidence"
-        icon={IconNavBell}
-      >
-        <EngineOfflineState />
-      </PageShell>
-    );
-  }
-
   return (
     <PageShell
       title="Alerts"
       subtitle="Every orchestrated decision (Layer A → B → C) with its reasoning and evidence"
       icon={IconNavBell}
+      fullHeight
     >
-      {/* Top KPIs */}
-      <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-        <StatCard title="Total alerts" value={ALERTS.length} icon={Bell} tone="indigo" />
-        <StatCard title="Critical" value={bySeverity.critical || 0} icon={ShieldAlert} tone="red" />
-        <StatCard title="High" value={bySeverity.high || 0} icon={ShieldAlert} tone="rose" />
-        <StatCard title="Safety-rail triggers" value={safetyRailTriggers} icon={ShieldCheck} tone="amber" />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <SearchInput
-            value={query}
-            onChange={setQuery}
-            placeholder="Search by message, asset, technique, IP…"
-            className="lg:max-w-xl"
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <Segmented options={SEVERITY_OPTIONS} value={severity} onChange={setSeverity} />
-            <Segmented options={TRIAGE_OPTIONS} value={triage} onChange={setTriage} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6">
+        <div className="shrink-0 space-y-6">
+          <DbSnapshotBanner />
+          {/* Top KPIs */}
+          <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+            <StatCard title="Total alerts" value={ALERTS.length} icon={Bell} tone="indigo" />
+            <StatCard title="Critical" value={bySeverity.critical || 0} icon={ShieldAlert} tone="red" />
+            <StatCard title="High" value={bySeverity.high || 0} icon={ShieldAlert} tone="rose" />
+            <StatCard title="Safety-rail triggers" value={safetyRailTriggers} icon={ShieldCheck} tone="amber" />
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className="mr-1 font-medium uppercase tracking-wider">Tactic:</span>
-          <button
-            type="button"
-            onClick={() => setTacticFilter("all")}
-            className={[
-              "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide transition",
-              tacticFilter === "all"
-                ? "bg-indigo-600 text-white"
-                : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/70 hover:bg-slate-100",
-            ].join(" ")}
-          >
-            All
-          </button>
-          {tacticCounts.map(([t, c]) => {
-            const name = tacticOf(t).name;
-            const active = tacticFilter === t;
-            return (
+
+          {/* Filters */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm ring-1 ring-slate-100/60">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                placeholder="Search by message, asset, technique, IP…"
+                className="lg:max-w-xl"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Segmented options={SEVERITY_OPTIONS} value={severity} onChange={setSeverity} />
+                <Segmented options={TRIAGE_OPTIONS} value={triage} onChange={setTriage} />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="mr-1 font-medium uppercase tracking-wider">Tactic:</span>
               <button
-                key={t}
                 type="button"
-                onClick={() => setTacticFilter(t)}
+                onClick={() => setTacticFilter("all")}
                 className={[
                   "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide transition",
-                  active
+                  tacticFilter === "all"
                     ? "bg-indigo-600 text-white"
                     : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/70 hover:bg-slate-100",
                 ].join(" ")}
               >
-                {name} · {c}
+                All
               </button>
-            );
-          })}
+              {tacticCounts.map(([t, c]) => {
+                const name = tacticOf(t).name;
+                const active = tacticFilter === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTacticFilter(t)}
+                    className={[
+                      "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide transition",
+                      active
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/70 hover:bg-slate-100",
+                    ].join(" ")}
+                  >
+                    {name} · {c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span className="inline-flex items-center gap-1">
+              <Activity className="h-3.5 w-3.5 text-slate-400" />
+              Showing <span className="mx-1 font-semibold text-slate-700">{filtered.length}</span> of {ALERTS.length}{" "}
+              alerts
+            </span>
+            <span className="hidden md:inline">Click a row to inspect layer-by-layer reasoning</span>
+          </div>
+        </div>
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {ALERTS.length === 0 ? (
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto py-6">
+              <EmptyState
+                icon={Bell}
+                title="No alerts yet"
+                description="There are no alerts stored for this site. The engine can push rows via HTTP ingest, or AegisRec can pull recent documents periodically from your Elasticsearch alert indices (ics-alerts-*). Mitigations stay empty unless Layer D output is ingested."
+              />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto py-6">
+              <EmptyState
+                icon={Bell}
+                title="No alerts match your filters"
+                description="Adjust severity, triage, or tactic filters — or clear your search term."
+              />
+            </div>
+          ) : (
+            <AlertsTable scrollable alerts={filtered} onOpen={(a) => setDrawerAlert(a)} />
+          )}
         </div>
       </div>
-
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span className="inline-flex items-center gap-1">
-          <Activity className="h-3.5 w-3.5 text-slate-400" />
-          Showing <span className="mx-1 font-semibold text-slate-700">{filtered.length}</span> of {ALERTS.length} alerts
-        </span>
-        <span className="hidden md:inline">Click a row to inspect layer-by-layer reasoning</span>
-      </div>
-
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={Bell}
-          title="No alerts match your filters"
-          description="Adjust severity, triage, or tactic filters — or clear your search term."
-        />
-      ) : (
-        <AlertsTable alerts={filtered} onOpen={(a) => setDrawerAlert(a)} />
-      )}
 
       <AlertDetailDrawer
         alert={drawerAlert}

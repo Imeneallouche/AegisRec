@@ -31,3 +31,28 @@ class Settings:
         self.cors_allow_origin_regex: str = (
             r"https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?$"
         )
+        # Elasticsearch (same host as MITRE docker-compose: port 9200). Logs, alert/correlation sync.
+        self.elasticsearch_url: str = os.environ.get(
+            "AEGISREC_ELASTICSEARCH_URL",
+            "http://127.0.0.1:9200",
+        )
+        self.elasticsearch_log_index_pattern: str = os.environ.get(
+            "AEGISREC_ES_LOG_INDEX_PATTERN",
+            "ics-*,linux-*,syslog-*,auditd-*,plc-*,hmi-*,scada-*",
+        )
+        # MITRE engine writes detection alerts / correlation summaries to these patterns by default.
+        self.elasticsearch_alert_index_pattern: str = os.environ.get(
+            "AEGISREC_ES_ALERT_INDEX_PATTERN",
+            "ics-alerts-*",
+        )
+        self.elasticsearch_correlation_index_pattern: str = os.environ.get(
+            "AEGISREC_ES_CORRELATION_INDEX_PATTERN",
+            "ics-correlations-*",
+        )
+        # Shared secret so the MITRE detection engine (or other automation) can POST ingest without a JWT.
+        # Accept AEGISREC_INGEST_SECRET as alias (engine forwarder default) so operators only set one name.
+        self.engine_ingest_secret: str | None = (
+            os.environ.get("AEGISREC_ENGINE_INGEST_SECRET")
+            or os.environ.get("AEGISREC_INGEST_SECRET")
+            or None
+        )

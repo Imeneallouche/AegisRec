@@ -9,11 +9,12 @@
  */
 
 export class EngineError extends Error {
-  constructor(message, { kind = "network", status, cause } = {}) {
+  constructor(message, { kind = "network", status, cause, requestUrl } = {}) {
     super(message);
     this.name = "EngineError";
-    this.kind = kind;       // "network" | "timeout" | "http" | "parse"
+    this.kind = kind; // "network" | "timeout" | "http" | "parse"
     this.status = status;
+    this.requestUrl = requestUrl;
     if (cause) this.cause = cause;
   }
 }

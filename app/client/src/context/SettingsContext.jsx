@@ -17,6 +17,10 @@ export const DEFAULT_SETTINGS = {
     requestTimeoutMs: 8000,
     demoMode: false,
   },
+  /** Log Monitoring: Elasticsearch time window (server queries @timestamp range). */
+  logMonitoring: {
+    recentWindowMinutes: 5,
+  },
   layerA: {
     alertThreshold: 0.50,
     recallFloorEnabled: true,

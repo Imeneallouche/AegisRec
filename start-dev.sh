@@ -12,6 +12,9 @@
 #   AEGISREC_PROXY_TARGET=http://127.0.0.1:8000  → CRA dev proxy for /api only (default derived from host+port)
 #   BROWSER=none            # set to empty to let CRA open a browser
 #
+# Elasticsearch (alert/correlation sync + log monitoring). Default matches MITRE compose (host port 9200).
+#   AEGISREC_ELASTICSEARCH_URL=http://127.0.0.1:9200
+#
 # MITRE ICS learning API (separate process; default port 8090 per MITRE config/learning.yml):
 #   cd MITRE-ATTACK-for-ICS-Detection-and-Correlation-Engine && python -m learning.cli serve
 #
@@ -25,9 +28,14 @@ VENV="$BACKEND_DIR/.venv"
 export AEGISREC_API_HOST="${AEGISREC_API_HOST:-127.0.0.1}"
 export AEGISREC_API_PORT="${AEGISREC_API_PORT:-8000}"
 export AEGISREC_JWT_SECRET="${AEGISREC_JWT_SECRET:-dev-local-change-me}"
+# Shared with MITRE detection-engine (docker-compose AEGISREC_INGEST_SECRET) for POST /api/engine/ingest/*.
+export AEGISREC_ENGINE_INGEST_SECRET="${AEGISREC_ENGINE_INGEST_SECRET:-grfics-dev-ingest-secret}"
 
 # CRA setupProxy forwards /api only. Leave REACT_APP_API_URL unset so the SPA uses
 # same-origin /api (avoids webpack HMR *.hot-update.json requests hitting FastAPI).
+# Do not set REACT_APP_API_URL to the MITRE learning API (default port 8090): it does not
+# implement /api/site/recent-logs and Log Monitoring will return HTTP 404. Set
+# REACT_APP_AEGISREC_API_URL only when the UI must call a non-default AegisRec base URL.
 export AEGISREC_PROXY_TARGET="http://${AEGISREC_API_HOST}:${AEGISREC_API_PORT}"
 unset REACT_APP_API_URL 2>/dev/null || true
 

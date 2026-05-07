@@ -10,6 +10,7 @@ import {
   RotateCcw,
   CheckCircle2,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 
 import PageShell from "../components/ui/PageShell";
@@ -59,7 +60,7 @@ export default function Settings() {
   const [tickState, setTickState] = React.useState({ status: "idle", message: null });
   const [savedFlash, setSavedFlash] = React.useState(false);
 
-  const { engine, layerA, layerC, layerD, notifications, analyst, appearance } = settings;
+  const { engine, layerA, layerC, layerD, notifications, analyst, appearance, logMonitoring } = settings;
 
   React.useEffect(() => {
     if (!savedFlash) return undefined;
@@ -221,6 +222,31 @@ export default function Settings() {
             ) : null}
           </div>
         )}
+      </SettingsGroup>
+
+      <SettingsGroup
+        icon={Clock}
+        title="Log monitoring (Elasticsearch)"
+        description="The Log Monitoring page queries Elasticsearch through the AegisRec API using a sliding @timestamp window. This does not depend on the ICS learning service."
+      >
+        <Field
+          label="Recent log window"
+          description="Show only logs from the last N minutes (1–1440). Also adjustable inline on the Log Monitoring page."
+          htmlFor="log-window-min"
+        >
+          <NumberInput
+            id="log-window-min"
+            value={logMonitoring.recentWindowMinutes}
+            onChange={(v) =>
+              mut("logMonitoring", {
+                recentWindowMinutes: Math.max(1, Math.min(1440, Number(v) || 5)),
+              })
+            }
+            min={1}
+            max={1440}
+            suffix="minutes"
+          />
+        </Field>
       </SettingsGroup>
 
       <SettingsGroup
@@ -428,6 +454,7 @@ function toneFor(status) {
   switch (status) {
     case "connected": return "emerald";
     case "demo":      return "indigo";
+    case "persisted": return "sky";
     case "offline":   return "rose";
     case "degraded":  return "amber";
     default:          return "slate";
@@ -438,6 +465,7 @@ function StatusLine({ label, value, tone = "slate", mono = false }) {
   const tones = {
     emerald: "text-emerald-700",
     indigo:  "text-indigo-700",
+    sky:     "text-sky-700",
     rose:    "text-rose-700",
     amber:   "text-amber-700",
     slate:   "text-slate-600",

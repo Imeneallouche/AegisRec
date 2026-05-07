@@ -5,12 +5,14 @@ import { resolveDetectionEngineBaseUrl } from "../utils/engineBaseUrl";
  * Typed wrappers for the Python learning service (see `learning/api.py`).
  *
  * Canonical endpoints:
- *   GET  /health                  → liveness + per-layer status
- *   GET  /snapshot                → chains + alerts + logs + mitigations + stats
- *   POST /alerts/score            → single-alert scoring
- *   POST /alerts/batch            → batch scoring
- *   POST /alerts/feedback         → analyst verdict for AVAR
- *   POST /poll/tick               → ask the orchestrator to poll Elasticsearch
+ *   GET  /health                          → liveness + per-layer status
+ *   GET  /snapshot                        → optional aggregate snapshot (404 tolerated)
+ *   GET  /integration/engine-alert-shape → engine alert JSON contract
+ *   POST /diagnostics/mapping-qa         → mapping QA batch rollup
+ *   POST /alerts/score                    → single-alert scoring (optional ?validate_alert=true)
+ *   POST /alerts/batch                   → batch scoring
+ *   POST /alerts/feedback               → analyst verdict for AVAR
+ *   POST /poll/tick                     → ask the orchestrator to poll Elasticsearch
  *
  * If the backend does not yet expose /snapshot, callers should treat a 404 as
  * a signal that the engine is running but data plumbing is incomplete and

@@ -284,8 +284,13 @@ npm start
 
           <Section id="integration" title="Backend integration" icon={Terminal}>
             <p>
-              AegisRec expects the following endpoints on the engine's FastAPI service.
+              AegisRec expects the following endpoints on the engine&apos;s FastAPI service.
               All requests are JSON; responses are JSON unless stated.
+            </p>
+            <p className="text-sm text-slate-600">
+              Printable contract (ports, alert fields):{" "}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">docs/MITRE-Detection-Engine.md</code>{" "}
+              in this repository.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Card title="GET /health">
@@ -301,6 +306,15 @@ npm start
                   Polled every <strong>N</strong> seconds (configurable in Settings).
                 </p>
               </Card>
+              <Card title="POST /alerts/score">
+                <p className="text-sm">
+                  Score a single alert. Optional query{" "}
+                  <code>?validate_alert=true</code> rejects malformed payloads before orchestration.
+                </p>
+              </Card>
+              <Card title="POST /alerts/batch">
+                <p className="text-sm">Batch scoring for multiple alert dicts.</p>
+              </Card>
               <Card title="POST /alerts/feedback">
                 <p className="text-sm">
                   Sends an analyst verdict (<em>confirmed / benign / ambiguous</em>) to
@@ -311,6 +325,18 @@ npm start
                 <p className="text-sm">
                   Forces the orchestrator to query Elasticsearch immediately rather than
                   waiting for its background timer.
+                </p>
+              </Card>
+              <Card title="GET /integration/engine-alert-shape">
+                <p className="text-sm">
+                  Canonical list of required vs. recommended keys on engine alert JSON — for
+                  importer authors and fixture validation.
+                </p>
+              </Card>
+              <Card title="POST /diagnostics/mapping-qa">
+                <p className="text-sm">
+                  Batch mapping QA rollup: body <code>{"{ rows: [...] }"}</code> with per-event
+                  gate summaries.
                 </p>
               </Card>
             </div>

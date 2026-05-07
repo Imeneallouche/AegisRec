@@ -21,7 +21,7 @@ import { formatRelative, formatPct } from "../components/ui/formatters";
 import { IconNavDashboard } from "../data/icons";
 
 import { useEngine } from "../context/EngineContext";
-import EngineOfflineState from "../components/ui/EngineOfflineState";
+import DbSnapshotBanner from "../components/ui/DbSnapshotBanner";
 import { assetOf, tacticOf } from "../data/detectionSample";
 
 function Card({ title, action, children, className = "" }) {
@@ -82,19 +82,7 @@ function AssetHeatRow({ assetId, count, max }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data, health, isConnected } = useEngine();
-
-  if (!isConnected) {
-    return (
-      <PageShell
-        title="SOC dashboard"
-        subtitle="Security posture of your ICS/OT environment — live outputs from the detection & correlation engine"
-        icon={IconNavDashboard}
-      >
-        <EngineOfflineState />
-      </PageShell>
-    );
-  }
+  const { data, health } = useEngine();
 
   const { chains = [], alerts = [], mitigations = [], stats } = data;
 
@@ -134,9 +122,10 @@ export default function Dashboard() {
   return (
     <PageShell
       title="SOC dashboard"
-      subtitle="Security posture of your ICS/OT environment — live outputs from the detection & correlation engine"
+      subtitle="Security posture of your ICS/OT environment — live outputs from the detection engine and data persisted in AegisRec"
       icon={IconNavDashboard}
     >
+      <DbSnapshotBanner />
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         <StatCard

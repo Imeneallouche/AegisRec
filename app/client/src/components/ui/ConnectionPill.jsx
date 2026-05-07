@@ -44,7 +44,7 @@ export default function ConnectionPill() {
       </span>
       <styles.Icon className="h-3.5 w-3.5" />
       <span>{styles.label}</span>
-      {lastUpdated && (status === "connected" || status === "demo") ? (
+      {lastUpdated && (status === "connected" || status === "demo" || status === "persisted") ? (
         <span className="hidden text-[0.65rem] text-slate-500 sm:inline">
           · {formatRelative(lastUpdated)}
         </span>
@@ -68,6 +68,13 @@ const STATE = {
     ping: "bg-indigo-400",
     Icon: FlaskConical,
     label: "Demo mode",
+  },
+  persisted: {
+    wrapper: "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100",
+    dot: "bg-sky-500",
+    ping: "bg-sky-400",
+    Icon: Wifi,
+    label: "DB snapshot",
   },
   offline: {
     wrapper: "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",

@@ -39,7 +39,7 @@ export default function PageShell({
               : "p-6 sm:p-8 lg:p-10",
           ].join(" ")}
         >
-          <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <header className="mb-8 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-4">
               {Icon ? (
                 <div
@@ -69,7 +69,9 @@ export default function PageShell({
           <div
             className={
               contentClassName ||
-              (fullHeight ? "flex min-h-0 flex-1 flex-col gap-6" : "flex flex-col gap-6")
+              (fullHeight
+                ? "flex min-h-0 flex-1 flex-col gap-6 overflow-hidden"
+                : "flex flex-col gap-6")
             }
           >
             {children}

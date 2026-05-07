@@ -7,7 +7,7 @@ from aegisrec.api.deps import get_current_site
 from aegisrec.controllers import site_controller
 from aegisrec.core.database import get_db
 from aegisrec.models.site import Site
-from aegisrec.schemas import MitigationAppliedPatch
+from aegisrec.schemas import MitigationAppliedPatch, SyncDetectionIndicesBody
 
 router = APIRouter(tags=["site"])
 
@@ -57,3 +57,26 @@ def ingest_mitigation(
     db: Session = Depends(get_db),
 ) -> Any:
     return site_controller.ingest_mitigation(db, site, body)
+
+
+@router.post("/site/sync-detection-indices")
+def sync_detection_indices(
+    body: SyncDetectionIndicesBody | None = None,
+    site: Site = Depends(get_current_site),
+    db: Session = Depends(get_db),
+) -> Any:
+    payload = body or SyncDetectionIndicesBody()
+    return site_controller.sync_detection_from_elasticsearch(db, site, payload)
+
+
+@router.get("/site/recent-logs")
+def recent_logs(
+    minutes: int = 5,
+    site: Site = Depends(get_current_site),
+) -> Any:
+    return site_controller.get_recent_logs(site, minutes=int(minutes))
+
+
+@router.get("/site/elasticsearch/health")
+def elasticsearch_health(site: Site = Depends(get_current_site)) -> Any:
+    return site_controller.get_elasticsearch_health()
